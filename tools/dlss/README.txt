@@ -101,6 +101,12 @@ IMPORTANT: the current scene resolve still follows bloom/DOF/scene combine,
 including distortion and 3D shader-reticle rendering. Those paths need temporal
 quality validation and may need further pass separation. HDR10 is not validated.
 
+Volumetric smoke uses the bound target's dimensions for ray-data and composite
+UVs, with explicit viewport resets when switching full-size/low-resolution
+fluid targets (ported from OGSR's smoke correction). The existing low-resolution
+raycast/edge buffers keep their own dimensions. Smoke/fire gameplay comparison
+across native and upscaled modes is still required for visual sign-off.
+
 NGX initialization lasts for the real D3D11 device lifetime. vid_restart releases
 the feature/targets, not global NGX. Shutdown occurs before device destruction.
 A private D3D11.1 context state isolates NGX and restores engine bindings.
