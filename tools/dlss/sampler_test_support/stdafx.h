@@ -12,6 +12,8 @@
 using u32 = unsigned;
 using ID3DSamplerState = ID3D11SamplerState;
 using D3D_SAMPLER_DESC = D3D11_SAMPLER_DESC;
+constexpr auto D3D_FILTER_ANISOTROPIC = D3D11_FILTER_ANISOTROPIC;
+constexpr auto D3D_FILTER_COMPARISON_ANISOTROPIC = D3D11_FILTER_COMPARISON_ANISOTROPIC;
 constexpr unsigned D3D_COMMONSHADER_SAMPLER_SLOT_COUNT = D3D11_COMMONSHADER_SAMPLER_SLOT_COUNT;
 template<class T> struct xr_vector : std::vector<T> { void clear_not_free() { this->clear(); } };
 template<class T> void clamp(T& value, T lo, T hi) { value = std::clamp(value, lo, hi); }

@@ -60,12 +60,13 @@ static void CheckBindings(dx10SamplerStateCache& cache, dx10SamplerStateCache::H
         VERIFY(cache.GetState(lookup) == handles[i]); // Bias/aniso never change handles.
     }
 }
-int main()
+int main(int argc, char** argv)
 try
 {
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
-    CHK_DX(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr, D3D11_CREATE_DEVICE_DEBUG,
+    const bool hardware = argc > 1 && std::strcmp(argv[1], "--hardware") == 0;
+    CHK_DX(D3D11CreateDevice(nullptr, hardware ? D3D_DRIVER_TYPE_HARDWARE : D3D_DRIVER_TYPE_WARP, nullptr, D3D11_CREATE_DEVICE_DEBUG,
         nullptr, 0, D3D11_SDK_VERSION, &device, nullptr, &context));
     ComPtr<ID3D11InfoQueue> debug;
     CHK_DX(device.As(&debug));
@@ -75,6 +76,7 @@ try
         D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_FILTER_MIN_MAG_MIP_LINEAR,
         D3D11_FILTER_ANISOTROPIC, D3D11_FILTER_COMPARISON_ANISOTROPIC};
     unsigned warmSwitches = 0;
+    unsigned warmFrames = 0;
     {
         dx10SamplerStateCache cache;
         for (unsigned lifetime = 0; lifetime < 3; ++lifetime)
@@ -113,34 +115,95 @@ try
             count = counted.creates;
             cache.SetMipLODBias(-0.585f);
             VERIFY(counted.creates == count);
-            // Invalidate both variants when anisotropy changes.
+            // AF changes create variants only for anisotropic samplers. The
+            // existing normal/scene pair survives for point/linear filters.
+            count = counted.creates;
             cache.SetMaxAnisotropy(16);
+            VERIFY(counted.creates == count + 2);
             CheckBindings(cache, handles, filters, -0.585f, 16);
             count = counted.creates;
             cache.SetMipLODBias(0);
-            VERIFY(counted.creates == count + handles.size());
+            VERIFY(counted.creates == count + 2);
             CheckBindings(cache, handles, filters, 0, 16);
             count = counted.creates;
             cache.SetMipLODBias(-0.585f);
             VERIFY(counted.creates == count);
             CheckBindings(cache, handles, filters, -0.585f, 16);
-            // Third bias evicts the older alternate instead of retaining a third.
+            // Recently used variants survive until the four-entry bound.
             cache.SetMipLODBias(0.25f);
             CheckBindings(cache, handles, filters, 0.25f, 16);
             count = counted.creates;
             cache.SetMipLODBias(-0.585f);
             VERIFY(counted.creates == count);
             cache.SetMipLODBias(0);
+            VERIFY(counted.creates == count);
+            CheckBindings(cache, handles, filters, 0, 16);
+            // Fill four NEW keys; zero must be evicted, not retained forever.
+            for (float bias : {0.5f, 0.75f, 1.f, 1.25f})
+            {
+                cache.SetMipLODBias(bias);
+                CheckBindings(cache, handles, filters, bias, 16);
+            }
+            count = counted.creates;
+            for (float bias : {0.5f, 0.75f, 1.f, 1.25f})
+            {
+                cache.SetMipLODBias(bias);
+                CheckBindings(cache, handles, filters, bias, 16);
+            }
+            VERIFY(counted.creates == count); // All four keys fit, not just three.
+            count = counted.creates;
+            cache.SetMipLODBias(0);
             VERIFY(counted.creates == count + handles.size());
+            CheckBindings(cache, handles, filters, 0, 16);
+            count = counted.creates;
+            cache.SetMipLODBias(0.75f); // Recent entry survives the fifth key.
+            VERIFY(counted.creates == count);
+            cache.SetMipLODBias(0.5f); // Least recently used entry was evicted.
+            VERIFY(counted.creates == count + handles.size());
+            CheckBindings(cache, handles, filters, 0.5f, 16);
+            cache.SetMipLODBias(0);
+
+            // Actual R4 frame sequence, not just bias toggles at fixed AF.
+            // Include native/DLAA, scaling presets, quality/AF changes, and
+            // repeated G-buffer enable/disable transitions within each frame.
+            for (unsigned af : {1u, 2u, 4u, 8u, 16u})
+            for (float sceneBias : {0.f, -0.585f, -0.765f, -1.f, -1.585f})
+            {
+                cache.SetMaxAnisotropy(1);
+                auto frame = [&]
+                {
+                    cache.SetMipLODBias(sceneBias);
+                    CheckBindings(cache, handles, filters, sceneBias, 1);
+                    cache.SetMaxAnisotropy(af);
+                    CheckBindings(cache, handles, filters, sceneBias, af);
+                    cache.SetMaxAnisotropy(1);
+                    CheckBindings(cache, handles, filters, sceneBias, 1);
+                    cache.SetMaxAnisotropy(af);
+                    CheckBindings(cache, handles, filters, sceneBias, af);
+                    cache.SetMaxAnisotropy(1);
+                    CheckBindings(cache, handles, filters, sceneBias, 1);
+                    cache.SetMipLODBias(0);
+                    CheckBindings(cache, handles, filters, 0, 1);
+                };
+                for (unsigned i = 0; i < 4; ++i) frame();
+                count = counted.creates;
+                for (unsigned i = 0; i < 100; ++i) { frame(); ++warmFrames; }
+                VERIFY(counted.creates == count);
+            }
+            cache.SetMaxAnisotropy(0);
+            CheckBindings(cache, handles, filters, 0, 1);
+            cache.SetMaxAnisotropy(64);
             CheckBindings(cache, handles, filters, 0, 16);
             cache.ClearStateArray();
             cache.ResetDeviceState();
             context->ClearState();
         }
-        // Destruction with two populated variants must release both.
+        // Destruction with all four populated variants must release them all.
         auto desc = Description(D3D11_FILTER_ANISOTROPIC);
         cache.GetState(desc);
         cache.SetMipLODBias(-1);
+        cache.SetMaxAnisotropy(1);
+        cache.SetMipLODBias(0);
     }
     context->ClearState();
     ComPtr<ID3D11Debug> deviceDebug;
@@ -161,9 +224,10 @@ try
         }
     }
     VERIFY(SUCCEEDED(device->GetDeviceRemovedReason()));
-    std::printf("Sampler cache passed: %u warmed bias switches with zero creation calls; "
-        "six shader stages, stable handles, late samplers, anisotropy invalidation, "
-        "bounded eviction, three resets and destruction; no live samplers or D3D11 errors.\n", warmSwitches);
+    std::printf("Sampler cache passed (%s): %u warmed bias switches and %u actual frame sequences with zero creation calls; "
+        "AF 1/2/4/8/16x, five biases, six shader stages, stable handles, late samplers, "
+        "four-variant eviction, three resets and destruction; no live samplers or D3D11 errors.\n",
+        hardware ? "hardware" : "WARP", warmSwitches, warmFrames);
     HW = {};
     return 0;
 }

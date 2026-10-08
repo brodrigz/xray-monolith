@@ -42,18 +42,25 @@ private:
 	typedef ID3DSamplerState IDeviceState;
 	typedef D3D_SAMPLER_DESC StateDecs;
 
+	struct StateVariant
+	{
+		IDeviceState* m_pState = nullptr;
+		float m_mipLODBias = 0.0f;
+		u32 m_maxAnisotropy = 1;
+	};
+
 	struct StateRecord
 	{
 		u32 m_crc;
-		IDeviceState* m_pState;
-		// Keep only the previous bias variant: normal/upscaled scene switches
-		// reuse two states without accumulating variants after setting changes.
-		IDeviceState* m_pAlternateState = nullptr;
-		float m_alternateMipLODBias = 0.0f;
+		bool m_usesAnisotropy;
+		// MRU first, active state at index 0. Four entries cover both scene/UI
+		// biases at selected/1x AF, with bounded LRU eviction after user changes.
+		StateVariant m_variants[4];
 	};
 
 private:
 	void CreateState(StateDecs desc, IDeviceState** ppIState);
+	void SelectVariant(StateRecord& rec);
 	SHandle FindState(const StateDecs& desc, u32 StateCRC);
 
 	void PrepareSamplerStates(
