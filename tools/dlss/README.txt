@@ -163,6 +163,25 @@ Exercise loading, camera cuts, vid_restart, fullscreen and unsupported runtime.
 Compare DLSS-off against unchanged binaries. Validate HDR separately.
 No visual-quality or performance claim follows from successful compilation.
 
+Sampler bias cache (MT branch)
+------------------------------
+Scene entry/exit selects the upscaling/normal mip bias. The sampler cache now
+retains at most two variants per sampler handle instead of recreating all
+samplers twice per upscaled main frame. A third bias evicts the older alternate;
+anisotropy changes invalidate the alternate, and cache/device teardown releases
+both. Descriptor matching and shader sampler handles retain their old semantics.
+No render passes, upscaler inputs, filtering settings or context isolation change.
+
+Build tools/dlss/sampler_test.vcxproj with Release|x64 and run
+_build/dlss_tests/sampler_test.exe. It compiles the production cache with a
+test-only engine adapter and real D3D11 WARP objects/debug validation. Cached
+descriptors are compared with uncached driver-normalized reference objects.
+The counter measures only the production cache's CreateSamplerState calls.
+Passed: 6000 warmed bias switches without cache creation calls; all six shader
+stages, stable handles, samplers added mid-scene, anisotropy invalidation,
+third-bias eviction, three cache resets and destructor cleanup; no live samplers
+or D3D11 errors. These are correctness/work-elimination tests, not FPS benchmarks.
+
 Dependencies and provenance
 ---------------------------
 sdk/FSR3 vendors OGSR's FSR 3.1.2/community DX11 backend and DXBC shaders.

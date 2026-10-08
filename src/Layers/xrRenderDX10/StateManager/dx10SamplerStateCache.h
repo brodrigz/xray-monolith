@@ -46,6 +46,10 @@ private:
 	{
 		u32 m_crc;
 		IDeviceState* m_pState;
+		// Keep only the previous bias variant: normal/upscaled scene switches
+		// reuse two states without accumulating variants after setting changes.
+		IDeviceState* m_pAlternateState = nullptr;
+		float m_alternateMipLODBias = 0.0f;
 	};
 
 private:

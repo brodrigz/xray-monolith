@@ -2,6 +2,7 @@
 #include "dx10SamplerStateCache.h"
 
 #include "../dx10StateUtils.h"
+#include <utility>
 
 using dx10StateUtils::operator==;
 
@@ -84,6 +85,7 @@ void dx10SamplerStateCache::ClearStateArray()
 	for (u32 i = 0; i < m_StateArray.size(); ++i)
 	{
 		_RELEASE(m_StateArray[i].m_pState);
+		_RELEASE(m_StateArray[i].m_pAlternateState);
 	}
 
 	m_StateArray.clear_not_free();
@@ -184,6 +186,8 @@ void dx10SamplerStateCache::SetMaxAnisotropy(u32 uiMaxAniso)
 		StateRecord& rec = m_StateArray[i];
 		StateDecs desc;
 
+		// Both bias variants contain the old anisotropy setting.
+		_RELEASE(rec.m_pAlternateState);
 		if (!rec.m_pState)
 			continue;
 
@@ -207,11 +211,19 @@ void dx10SamplerStateCache::SetMipLODBias(float uiMipLODBias)
     if (m_uiMipLODBias == uiMipLODBias)
         return;
 
+    const float previousBias = m_uiMipLODBias;
     m_uiMipLODBias = uiMipLODBias;
 
     for (u32 i = 0; i < m_StateArray.size(); ++i)
     {
         StateRecord& rec = m_StateArray[i];
+        if (rec.m_pAlternateState && rec.m_alternateMipLODBias == uiMipLODBias)
+        {
+            std::swap(rec.m_pState, rec.m_pAlternateState);
+            rec.m_alternateMipLODBias = previousBias;
+            continue;
+        }
+
         StateDecs desc;
 
         rec.m_pState->GetDesc(&desc);
@@ -219,9 +231,14 @@ void dx10SamplerStateCache::SetMipLODBias(float uiMipLODBias)
         desc.MipLODBias = m_uiMipLODBias;
         dx10StateUtils::ValidateState(desc);
 
-        // This can cause fragmentation if called too often
-        rec.m_pState->Release();
-        CreateState(desc, &rec.m_pState);
+        // Populate a new variant before retiring the previous alternate.
+        // A steady normal/scene pair needs no creation or descriptor queries.
+        IDeviceState* nextState = nullptr;
+        CreateState(desc, &nextState);
+        _RELEASE(rec.m_pAlternateState);
+        rec.m_pAlternateState = rec.m_pState;
+        rec.m_alternateMipLODBias = previousBias;
+        rec.m_pState = nextState;
     }
 }
 
