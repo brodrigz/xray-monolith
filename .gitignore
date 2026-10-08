@@ -5,6 +5,9 @@
 
 # exclude binaries and temporary files
 _build/
+# Downloaded upscaler runtimes and machine-specific shader dependency files
+nvngx_dlss*.dll
+/sdk/FSR3/shaders/*.d
 /src/*.tss
 /**/x64/
 **/.vs/
