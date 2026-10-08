@@ -69,6 +69,7 @@ void CRender::Render()
 	PIX_EVENT_C(CRender_Render, dx10_marker_frame);
 	dx10_annotate_frame();
 	dlss::EndScene();
+	GMBase.RGraph.mapHUDNativeUi.clear(); // Never retain packets across views/menu/reset.
 
 	rmNormal();
 
@@ -198,6 +199,7 @@ void CRender::Render()
 		// level
 		Target->phase_scene_begin();
 		GMBase.r_dsgraph_capture_hud();
+		if (dlss::Configured()) GMBase.r_dsgraph_extract_native_ui();
 		GMBase.r_dsgraph_render_hud();
 		GMBase.r_dsgraph_render_lods(true,true);
 		if (Details) Details->Render();

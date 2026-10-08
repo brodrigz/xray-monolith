@@ -15,7 +15,7 @@ Audited enabled loose-file providers in G.A.M.M.A. Co-op, 2026-10-07:
   189- Beef's NVG - theRealBeef:
     night_vision.h
   New integration files:
-    dlss_contract.h, dlss_copy.ps, dlss_cas.h, dlss_sharpen.ps
+    dlss_contract.h, dlss_copy.ps, dlss_cas.h, dlss_sharpen.ps, dlss_ui_depth.ps
     scripts/modxml_dlss_options.script
     configs/text/eng/st_monolith_dlss.xml
 
@@ -48,6 +48,12 @@ Changes: non-jittered MV convention retained; bounded homogeneous division;
 uniform DLSS grass jitter and previous wind motion; flat-material MV output;
 jitter-aware SSS history reprojection; NV depth loads use physical depth size.
 Existing material/weather/NV customization and attribution remain in place.
+
+The matching engine draws the handheld PDA screen after reconstruction, at
+display resolution. dlss_ui_depth.ps supplies unjittered occlusion depth so
+hands/casing still hide the screen. Update BOTH binaries and this patch; older
+patches without that shader are rejected with an explicit upscaler log message.
+The flat 2D PDA/menu already renders after the scene at display resolution.
 
 This is a profile-specific experimental override, not a generic SSS distribution.
 Other versions or higher-priority overrides require re-merging and testing.

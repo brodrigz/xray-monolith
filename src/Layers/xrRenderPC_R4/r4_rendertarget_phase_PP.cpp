@@ -123,6 +123,7 @@ ref_rt& CRenderTarget::PostprocessSource()
 
 void CRenderTarget::phase_dlss_postprocess()
 {
+	const auto sceneJitter = dlss::RasterJitter();
 	const bool dlssOutput = dlss::Evaluate(rt_Color->pSurface, rt_ssfx_motion_vectors->pSurface);
 	dlss::EndScene();
 	if (!dlss::Configured()) return;
@@ -149,6 +150,30 @@ void CRenderTarget::phase_dlss_postprocess()
 	if (sharpen) RCache.set_c("dlss_sharpening", ps_r_dlss_sharpness, 0.f, 0.f, 0.f);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
+
+	if (!RImplementation.GMBase.RGraph.mapHUDNativeUi.empty())
+	{
+		if (!reported_native_ui)
+		{
+			Msg("[Upscaler] PDA screen drawn after reconstruction: native=%ux%u, scene=%ux%u, draws=%u",
+				Device.dwWidth, Device.dwHeight, dlss::RenderWidth(), dlss::RenderHeight(),
+				unsigned(RImplementation.GMBase.RGraph.mapHUDNativeUi.size()));
+			reported_native_ui = true;
+		}
+		// Scene depth is render-sized and jittered. Reproject it into the existing
+		// native depth buffer before drawing the unjittered PDA screen. Keep its
+		// occlusion by hands/casing; never attach a render-sized DSV to a native RT.
+		u_setrt(rt_dlss_post_source, nullptr, nullptr, HW.pBaseZB);
+		RCache.set_Element(s_dlss_ui_depth->E[0]);
+		RCache.set_c("dlss_ui_depth_params", float(dlss::RenderWidth()) / w,
+			float(dlss::RenderHeight()) / h, sceneJitter.x, sceneJitter.y);
+		RCache.set_ZFunc(D3DCMP_ALWAYS);
+		RCache.set_ColorWriteEnable(0);
+		RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
+		RCache.set_ColorWriteEnable();
+		RCache.set_CullMode(CULL_CCW);
+		RImplementation.GMBase.r_dsgraph_render_native_ui();
+	}
 
 	if (ps_r2_mask_control.x > 0)
 	{

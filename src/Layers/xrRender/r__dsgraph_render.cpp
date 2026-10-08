@@ -15,6 +15,9 @@
 #include "flod.h"
 
 #include "../../xrEngine/xr_object.h"
+#if RENDER == R_R4
+#include "../xrRenderPC_R4/Dlss/DlssNativeUi.h"
+#endif
 
 using namespace R_dsgraph;
 
@@ -311,6 +314,37 @@ void CDSGraphManager::r_dsgraph_render_ScopeSorted()  //  Redotix99: for 3D Shad
 	// Rendering
 	RImplementation.rmNear();
 	r_dsgraph_render_graph_sorted(RGraph.mapScopeHUDSorted, true);
+	RImplementation.rmNormal();
+}
+#endif
+
+#if RENDER == R_R4
+void CDSGraphManager::r_dsgraph_extract_native_ui()
+{
+	// Match the PDA render texture instead of a particular mod's shader name.
+	// Only the main HUD's sorted screen geometry is moved; scopes and world
+	// materials keep their existing render paths.
+	dlss::ExtractNativeUi(RGraph.mapHUDSorted.Sorted, RGraph.mapHUDNativeUi, [](const auto& item)
+	{
+		for (const auto& pass : item.pSE->passes)
+		{
+			if (!pass->T) continue;
+			for (const auto& texture : *pass->T)
+				if (texture.second && texture.second->cName == "$user$ui") return true;
+		}
+		return false;
+	});
+	// Do not leave a second copy in an emissive or distortion scene pass.
+	dlss::RemoveNativeUiDuplicates(RGraph.mapHUDSorted.Emissive, RGraph.mapHUDNativeUi);
+	dlss::RemoveNativeUiDuplicates(RGraph.mapHUDSorted.Distort, RGraph.mapHUDNativeUi);
+}
+
+void CDSGraphManager::r_dsgraph_render_native_ui()
+{
+	PROF_EVENT("r_dsgraph_render_native_ui");
+	CHudInitializer initializer(true);
+	RImplementation.rmNear();
+	r_dsgraph_render_graph_sorted(RGraph.mapHUDNativeUi, true);
 	RImplementation.rmNormal();
 }
 #endif

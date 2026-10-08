@@ -39,9 +39,10 @@ void InitializeTargets()
     if (!ps_r_upscaler || (ps_r_upscaler == 1 && !ps_r_dlss_quality)) return;
     useFsr = ps_r_upscaler == 2;
     string_path marker;
-    if (!RImplementation.o.ssfx_motionvectors || !FS.exist(marker, "$game_shaders$", "r3\\dlss_contract.h"))
+    if (!RImplementation.o.ssfx_motionvectors || !FS.exist(marker, "$game_shaders$", "r3\\dlss_contract.h") ||
+        !FS.exist(marker, "$game_shaders$", "r3\\dlss_ui_depth.ps"))
     {
-        Msg("! [%s] Disabled: the matching SSS 23 temporal-upscaling shader override is required.", Method());
+        Msg("! [%s] Disabled: update the matching SSS 23 temporal-upscaling shader override (dlss_contract.h and dlss_ui_depth.ps required).", Method());
         return;
     }
     if (RImplementation.o.dx10_msaa)
@@ -121,6 +122,7 @@ bool Active() { return configured && inScene && mainView && (useFsr ? fsrBackend
 Offset RasterJitter() { return rasterJitter; }
 Offset PreviousRasterJitter() { return previousJitter; }
 ID3DDepthStencilView* SceneDepth() { return inScene && configured ? sceneDepthView.Get() : HW.pBaseZB; }
+ID3D11Texture2D* SceneDepthTexture() { return sceneDepth.Get(); }
 ID3D11Texture2D* Output() { return useFsr ? fsrBackend.Output() : backend.Output(); }
 
 void BeginScene()

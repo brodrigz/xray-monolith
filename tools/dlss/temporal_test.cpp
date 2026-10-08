@@ -1,4 +1,6 @@
 #include "../../src/Layers/xrRenderPC_R4/Dlss/DlssTemporal.h"
+#include "../../src/Layers/xrRenderPC_R4/Dlss/DlssNativeUi.h"
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 
@@ -37,5 +39,19 @@ int main()
     Require(history.Begin(1, false), "restarted frame sequence resets");
     history.Invalidate();
     Require(history.Begin(20, false), "vid_restart and failed evaluations reset history");
+    struct Draw { int pVisual, pMatrix; bool ui; };
+    std::vector<Draw> scene{{1, 10, false}, {2, 20, true}, {3, 30, false}, {4, 40, true}};
+    std::vector<Draw> native{{99, 99, true}};
+    ExtractNativeUi(scene, native, [](const Draw& draw) { return draw.ui; });
+    Require(scene.size() == 2 && scene[0].pVisual == 1 && scene[1].pVisual == 3,
+        "non-PDA draws remain in scene order");
+    Require(native.size() == 2 && native[0].pVisual == 2 && native[1].pVisual == 4,
+        "PDA screen packets move once and stale native packets are discarded");
+    std::vector<Draw> emissive{{2, 20, true}, {2, 21, false}, {3, 30, false}, {4, 40, true}};
+    RemoveNativeUiDuplicates(emissive, native);
+    Require(emissive.size() == 2 && emissive[0].pMatrix == 21 && emissive[1].pVisual == 3,
+        "remove scene duplicates without removing another instance of the same mesh");
+    ExtractNativeUi(scene, native, [](const Draw& draw) { return draw.ui; });
+    Require(native.empty() && scene.size() == 2, "closing PDA leaves no stale native UI");
     std::puts("DLSS temporal contract tests passed.");
 }

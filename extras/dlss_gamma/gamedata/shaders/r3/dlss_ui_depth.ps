@@ -1,0 +1,14 @@
+// Native-resolution depth for HUD screens drawn AFTER temporal reconstruction.
+// Jitter is in render pixels (+X right, +Y down). Sample the corresponding
+// jittered scene pixel; filtering depth would invent surfaces at silhouettes.
+Texture2D<float> s_scene_depth;
+float4 dlss_ui_depth_params; // render/display xy, current raster jitter zw
+
+float main(float4 position : SV_Position) : SV_Depth
+{
+    uint width, height;
+    s_scene_depth.GetDimensions(width, height);
+    int2 pixel = int2(floor(position.xy * dlss_ui_depth_params.xy + dlss_ui_depth_params.zw));
+    pixel = clamp(pixel, int2(0, 0), int2(width, height) - 1);
+    return s_scene_depth.Load(int3(pixel, 0));
+}
