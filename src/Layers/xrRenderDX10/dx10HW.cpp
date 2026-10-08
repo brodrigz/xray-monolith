@@ -720,6 +720,9 @@ void CHW::CreateDevice(HWND hwnd, bool move_window)
 
 void CHW::DestroyDevice()
 {
+#ifdef USE_DX11
+    dlss::ShutdownDevice();
+#endif
     //	Destroy state managers
     StateManager.Reset();
     RSManager.ClearStateArray();

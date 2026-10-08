@@ -1,0 +1,6 @@
+#include "common.h"
+
+float4 main(p_screen I) : SV_Target
+{
+    return s_image.SampleLevel(smp_rtlinear, I.tc0, 0);
+}

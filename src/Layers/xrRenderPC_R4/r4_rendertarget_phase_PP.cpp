@@ -111,15 +111,70 @@ struct TL_2c3uv
 	}
 };
 
+ref_rt& CRenderTarget::PostprocessColor()
+{
+	return dlss::Configured() ? rt_dlss_post_color : (RImplementation.o.dx10_msaa ? rt_Generic : rt_Color);
+}
+
+ref_rt& CRenderTarget::PostprocessSource()
+{
+	return dlss::Configured() ? rt_dlss_post_source : rt_Generic_0;
+}
+
+void CRenderTarget::phase_dlss_postprocess()
+{
+	const bool dlssOutput = dlss::Evaluate(rt_Color->pSurface, rt_ssfx_motion_vectors->pSurface);
+	dlss::EndScene();
+	if (!dlss::Configured()) return;
+
+	// Separate display-resolution overlay buffers. Never feed screen-locked
+	// distortion, NV noise or fake scopes back into the scene's DLSS history.
+	u_setrt(rt_dlss_post_source, nullptr, nullptr, nullptr);
+	RImplementation.rmNormal();
+	RCache.set_CullMode(CULL_NONE);
+	RCache.set_Stencil(FALSE);
+	RCache.set_ColorWriteEnable();
+	u32 offset;
+	const float w = float(Device.dwWidth), h = float(Device.dwHeight);
+	FVF::TL* vertices = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, offset);
+	vertices[0].set(0, h, EPS_S, 1, 0xffffffff, 0, 1);
+	vertices[1].set(0, 0, EPS_S, 1, 0xffffffff, 0, 0);
+	vertices[2].set(w, h, EPS_S, 1, 0xffffffff, 1, 1);
+	vertices[3].set(w, 0, EPS_S, 1, 0xffffffff, 1, 0);
+	RCache.Vertex.Unlock(4, g_combine->vb_stride);
+	// Fuse optional CAS into the existing resolve draw: no extra target or copy.
+	// Zero retains the original copy shader; fallback/scope frames are unsharpened.
+	const bool sharpen = dlssOutput && ps_r_dlss_sharpness > 0.0f;
+	RCache.set_Element(s_dlss_copy->E[dlssOutput ? (sharpen ? 2 : 0) : 1]);
+	if (sharpen) RCache.set_c("dlss_sharpening", ps_r_dlss_sharpness, 0.f, 0.f, 0.f);
+	RCache.set_Geometry(g_combine);
+	RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
+
+	if (ps_r2_mask_control.x > 0)
+	{
+		phase_gasmask_dudv();
+		if (ps_r2_drops_control.x > 0) phase_gasmask_drops();
+	}
+	if (ps_r2_nightvision > 0) phase_nightvision();
+	if (ps_r2_heatvision > 0) phase_heatvision();
+	if (scope_fake_enabled) phase_fakescope();
+}
+
 void CRenderTarget::phase_pp()
 {
+	phase_dlss_postprocess();
 	// combination/postprocess
 	u_setrt(Device.dwWidth, Device.dwHeight, HW.pBaseRT,NULL,NULL, HW.pBaseZB);
+	RImplementation.rmNormal();
 	//	Element 0 for for normal post-process
 	//	Element 4 for color map post-process
 	bool bCMap = u_need_CM();
 	//RCache.set_Element	(s_postprocess->E[bCMap ? 4 : 0]);
-	if (!RImplementation.o.dx10_msaa)
+	if (dlss::Configured())
+	{
+		RCache.set_Element(s_dlss_postprocess->E[bCMap ? 4 : 0]);
+	}
+	else if (!RImplementation.o.dx10_msaa)
 	{
 		//		RCache.set_Shader	(s_postprocess	);
 		RCache.set_Element(s_postprocess->E[bCMap ? 4 : 0]);

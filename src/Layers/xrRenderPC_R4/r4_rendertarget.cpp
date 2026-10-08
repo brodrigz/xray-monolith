@@ -36,6 +36,69 @@
 
 D3D_VIEWPORT custom_viewport[1] = { 0, 0, 0, 0, 0.f, 1.f };
 
+class CBlender_dlss_postprocess : public IBlender
+{
+public:
+    CBlender_dlss_postprocess() { description.CLS = 0; }
+    LPCSTR getComment() override { return "DLSS display-resolution postprocess"; }
+    BOOL canBeDetailed() override { return FALSE; }
+    BOOL canBeLMAPped() override { return FALSE; }
+    void Compile(CBlender_Compile& C) override
+    {
+        IBlender::Compile(C);
+        if (C.iElement != 0 && C.iElement != 4) return;
+        C.r_Pass("stub_notransform_postpr", C.iElement == 4 ? "postprocess_CM" : "postprocess",
+            FALSE, FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_base0", "$user$dlss_post_source");
+        C.r_dx10Texture("s_base1", "$user$dlss_post_source");
+        C.r_dx10Texture("s_noise", "fx\\fx_noise2");
+        if (C.iElement == 4)
+        {
+            C.r_dx10Texture("s_grad0", "$user$cmap0");
+            C.r_dx10Texture("s_grad1", "$user$cmap1");
+        }
+        C.r_dx10Sampler("smp_rtlinear");
+        C.r_dx10Sampler("smp_linear");
+        C.r_End();
+    }
+};
+
+class CBlender_dlss_menu : public IBlender
+{
+public:
+    CBlender_dlss_menu() { description.CLS = 0; }
+    LPCSTR getComment() override { return "Display-resolution menu"; }
+    BOOL canBeDetailed() override { return FALSE; }
+    BOOL canBeLMAPped() override { return FALSE; }
+    void Compile(CBlender_Compile& C) override
+    {
+        IBlender::Compile(C);
+        C.r_Pass("stub_notransform_t", "distort", FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_base", "$user$dlss_post_source");
+        C.r_dx10Texture("s_distort", "$user$dlss_post_color");
+        C.r_dx10Sampler("smp_rtlinear");
+        C.r_End();
+    }
+};
+
+class CBlender_dlss_copy : public IBlender
+{
+public:
+    CBlender_dlss_copy() { description.CLS = 0; }
+    LPCSTR getComment() override { return "DLSS resolve / spatial fallback"; }
+    BOOL canBeDetailed() override { return FALSE; }
+    BOOL canBeLMAPped() override { return FALSE; }
+    void Compile(CBlender_Compile& C) override
+    {
+        IBlender::Compile(C);
+        if (C.iElement > 2) return;
+        C.r_Pass("stub_screen_space", C.iElement == 2 ? "dlss_sharpen" : "dlss_copy", FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_image", C.iElement == 1 ? r2_RT_albedo : "$user$dlss_output");
+        C.r_dx10Sampler("smp_rtlinear");
+        C.r_End();
+    }
+};
+
 void CRenderTarget::set_viewport_size(ID3DDeviceContext * dev, float w, float h)
 {
 	custom_viewport[0].Width = w;
@@ -45,6 +108,7 @@ void CRenderTarget::set_viewport_size(ID3DDeviceContext * dev, float w, float h)
 
 void CRenderTarget::u_setrt(const ref_rt& _1, const ref_rt& _2, const ref_rt& _3, const ref_rt& _4, ID3DDepthStencilView* zb)
 {
+	if (zb == HW.pBaseZB) zb = dlss::SceneDepth();
 	VERIFY(_1 || zb);
 	if (_1)
 	{
@@ -82,12 +146,13 @@ void CRenderTarget::u_setrt(const ref_rt& _1, const ref_rt& _2, const ref_rt& _3
 	else RCache.set_RT(NULL, 2);
 	if (_4) RCache.set_RT(_4->pRT, 3);
 	else RCache.set_RT(NULL, 3);
-	RCache.set_ZB(zb);
+	RCache.set_ZB(zb == HW.pBaseZB ? dlss::SceneDepth() : zb);
 	//	RImplementation.rmNormal				();
 }
 
 void CRenderTarget::u_setrt(const ref_rt& _1, const ref_rt& _2, const ref_rt& _3, ID3DDepthStencilView* zb)
 {
+	if (zb == HW.pBaseZB) zb = dlss::SceneDepth();
 	VERIFY(_1||zb);
 	if (_1)
 	{
@@ -123,12 +188,13 @@ void CRenderTarget::u_setrt(const ref_rt& _1, const ref_rt& _2, const ref_rt& _3
 	else RCache.set_RT(NULL, 1);
 	if (_3) RCache.set_RT(_3->pRT, 2);
 	else RCache.set_RT(NULL, 2);
-	RCache.set_ZB(zb);
+	RCache.set_ZB(zb == HW.pBaseZB ? dlss::SceneDepth() : zb);
 	//	RImplementation.rmNormal				();
 }
 
 void CRenderTarget::u_setrt(const ref_rt& _1, const ref_rt& _2, ID3DDepthStencilView* zb)
 {
+	if (zb == HW.pBaseZB) zb = dlss::SceneDepth();
 	VERIFY(_1||zb);
 	if (_1)
 	{
@@ -161,7 +227,7 @@ void CRenderTarget::u_setrt(const ref_rt& _1, const ref_rt& _2, ID3DDepthStencil
 	else RCache.set_RT(NULL, 0);
 	if (_2) RCache.set_RT(_2->pRT, 1);
 	else RCache.set_RT(NULL, 1);
-	RCache.set_ZB(zb);
+	RCache.set_ZB(zb == HW.pBaseZB ? dlss::SceneDepth() : zb);
 	//	RImplementation.rmNormal				();
 }
 
@@ -175,7 +241,7 @@ void CRenderTarget::u_setrt(u32 W, u32 H, ID3DRenderTargetView* _1, ID3DRenderTa
 	RCache.set_RT(_1, 0);
 	RCache.set_RT(_2, 1);
 	RCache.set_RT(_3, 2);
-	RCache.set_ZB(zb);
+	RCache.set_ZB(zb == HW.pBaseZB ? dlss::SceneDepth() : zb);
 	//	RImplementation.rmNormal				();
 }
 
@@ -185,8 +251,8 @@ void CRenderTarget::u_stencil_optimize(eStencilOptimizeMode eSOM)
 	VERIFY(RImplementation.o.nvstencil);
 	//RCache.set_ColorWriteEnable	(FALSE);
 	u32 Offset;
-	float _w = float(Device.dwWidth);
-	float _h = float(Device.dwHeight);
+	float _w = float(RenderScreenWidth());
+	float _h = float(RenderScreenHeight());
 	u32 C = color_rgba(255, 255, 255, 255);
 	float eps = 0;
 	float _dw = 0.5f;
@@ -252,8 +318,8 @@ void CRenderTarget::u_compute_texgen_jitter(Fmatrix& m_Texgen_J)
 	m_Texgen_J.mul(m_TexelAdjust, RCache.xforms.m_wvp);
 
 	// rescale - tile it
-	float scale_X = float(Device.dwWidth) / float(TEX_jitter);
-	float scale_Y = float(Device.dwHeight) / float(TEX_jitter);
+	float scale_X = float(RenderScreenWidth()) / float(TEX_jitter);
+	float scale_Y = float(RenderScreenHeight()) / float(TEX_jitter);
 	//float	offset			= (.5f / float(TEX_jitter));
 	m_TexelAdjust.scale(scale_X, scale_Y, 1.f);
 	//m_TexelAdjust.translate_over(offset,	offset,	0	);
@@ -349,6 +415,7 @@ void generate_jitter(DWORD* dest, u32 elem_count)
 
 CRenderTarget::CRenderTarget()
 {
+	dlss::InitializeTargets();
 	u32 SampleCount = 1;
 
 	if (ps_r_ssao_mode != 2/*hdao*/)
@@ -486,7 +553,7 @@ CRenderTarget::CRenderTarget()
 	}
 	//	NORMAL
 	{
-		u32 w = Device.dwWidth, h = Device.dwHeight;
+		u32 w = dlss::RenderWidth(), h = dlss::RenderHeight();
 		rt_Position.create(r2_RT_P, w, h, D3DFMT_A16B16G16R16F, SampleCount);
 
 		if (RImplementation.o.dx10_msaa)
@@ -553,11 +620,11 @@ CRenderTarget::CRenderTarget()
 		rt_dof.create(r2_RT_dof, w, h, RImplementation.o.dx11_hdr10 ? D3DFMT_A16B16G16R16F : D3DFMT_A8R8G8B8);
 
 		if (RImplementation.o.dx11_hdr10) {
-			rt_secondVP.create(r2_RT_secondVP, w, h, D3DFMT_A2R10G10B10, 1); //--#SM+#-- +SecondVP+ // NOTE: this is a hack to use DXGI R10G10B10A2_UNORM
-			rt_ui_pda.create(r2_RT_ui, w, h, D3DFMT_A2R10G10B10); // NOTE: this is a hack to use DXGI R10G10B10A2_UNORM
+			rt_secondVP.create(r2_RT_secondVP, Device.dwWidth, Device.dwHeight, D3DFMT_A2R10G10B10, 1); //--#SM+#-- +SecondVP+ // NOTE: this is a hack to use DXGI R10G10B10A2_UNORM
+			rt_ui_pda.create(r2_RT_ui, Device.dwWidth, Device.dwHeight, D3DFMT_A2R10G10B10); // NOTE: this is a hack to use DXGI R10G10B10A2_UNORM
 		} else {
-			rt_secondVP.create(r2_RT_secondVP, w, h, D3DFMT_A8R8G8B8, 1); //--#SM+#-- +SecondVP+
-			rt_ui_pda.create(r2_RT_ui, w, h, D3DFMT_A8R8G8B8);
+			rt_secondVP.create(r2_RT_secondVP, Device.dwWidth, Device.dwHeight, D3DFMT_A8R8G8B8, 1); //--#SM+#-- +SecondVP+
+			rt_ui_pda.create(r2_RT_ui, Device.dwWidth, Device.dwHeight, D3DFMT_A8R8G8B8);
 		}
 
 		// TODO: R11G11B10F? needs another horrible hack + cast + update to converter function
@@ -890,8 +957,8 @@ CRenderTarget::CRenderTarget()
 
 	//SMAA
 	{
-		u32 w = Device.dwWidth;
-		u32 h = Device.dwHeight;
+		u32 w = dlss::RenderWidth();
+		u32 h = dlss::RenderHeight();
 
 		rt_smaa_edgetex.create(r2_RT_smaa_edgetex, w, h, D3DFMT_A8R8G8B8);
 		rt_smaa_blendtex.create(r2_RT_smaa_blendtex, w, h, D3DFMT_A8R8G8B8);
@@ -928,13 +995,13 @@ CRenderTarget::CRenderTarget()
 		u32 h = 0;
 		if (RImplementation.o.ssao_half_data)
 		{
-			w = Device.dwWidth / 2;
-			h = Device.dwHeight / 2;
+			w = dlss::RenderWidth() / 2;
+			h = dlss::RenderHeight() / 2;
 		}
 		else
 		{
-			w = Device.dwWidth;
-			h = Device.dwHeight;
+			w = dlss::RenderWidth();
+			h = dlss::RenderHeight();
 		}
 
 		D3DFORMAT fmt = HW.Caps.id_vendor == 0x10DE ? D3DFMT_R32F : D3DFMT_R16F;
@@ -963,7 +1030,7 @@ CRenderTarget::CRenderTarget()
 	// HDAO
 	if (RImplementation.o.ssao_hdao && RImplementation.o.ssao_ultra)
 	{
-		u32 w = Device.dwWidth, h = Device.dwHeight;
+		u32 w = dlss::RenderWidth(), h = dlss::RenderHeight();
 		rt_ssao_temp.create(r2_RT_ssao_temp, w, h, D3DFMT_R16F, 1, true);
 		s_hdao_cs.create(b_hdao_cs, "r2\\ssao");
 		if (RImplementation.o.dx10_msaa)
@@ -1288,11 +1355,27 @@ CRenderTarget::CRenderTarget()
 
 	// PP
 	s_postprocess.create("postprocess");
+	if (dlss::Configured())
+	{
+		rt_dlss_post_source.create("$user$dlss_post_source", Device.dwWidth, Device.dwHeight, D3DFMT_A16B16G16R16F);
+		rt_dlss_post_color.create("$user$dlss_post_color", Device.dwWidth, Device.dwHeight, D3DFMT_A16B16G16R16F);
+		t_dlss_output.create("$user$dlss_output");
+		t_dlss_output->surface_set(dlss::Output());
+		CBlender_dlss_postprocess blender;
+		s_dlss_postprocess.create(&blender, "dlss_postprocess");
+		CBlender_dlss_copy copy;
+		s_dlss_copy.create(&copy, "dlss_copy");
+	}
 	g_postprocess.create(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX3, RCache.Vertex.Buffer(),
 	                     RCache.QuadIB);
 
 	// Menu
-	s_menu.create("distort");
+	if (dlss::Configured())
+	{
+		CBlender_dlss_menu menu;
+		s_menu.create(&menu, "dlss_menu");
+	}
+	else s_menu.create("distort");
 	g_menu.create(FVF::F_TL, RCache.Vertex.Buffer(), RCache.QuadIB);
 
 	//
@@ -1302,6 +1385,8 @@ CRenderTarget::CRenderTarget()
 
 CRenderTarget::~CRenderTarget()
 {
+	if (t_dlss_output) t_dlss_output->surface_set(nullptr);
+	dlss::ReleaseTargets();
 	_RELEASE(t_ss_async);
 
 	// Textures
@@ -1446,8 +1531,8 @@ void CRenderTarget::reset_light_marker(bool bResetStencil)
 	if (bResetStencil)
 	{
 		u32 Offset;
-		float _w = float(Device.dwWidth);
-		float _h = float(Device.dwHeight);
+		float _w = float(RenderScreenWidth());
+		float _h = float(RenderScreenHeight());
 		u32 C = color_rgba(255, 255, 255, 255);
 		float eps = 0;
 		float _dw = 0.5f;

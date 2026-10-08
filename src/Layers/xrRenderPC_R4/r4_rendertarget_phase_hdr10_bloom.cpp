@@ -24,11 +24,11 @@ void CRenderTarget::phase_hdr10_bloom()
 {
     RCache.set_Z(FALSE);
 
-    float orig_w = float(Device.dwWidth);
-    float orig_h = float(Device.dwHeight);
+    float orig_w = float(RenderScreenWidth());
+    float orig_h = float(RenderScreenHeight());
 
-    float bloom_w = floor(float(Device.dwWidth)  / 2.0f);
-    float bloom_h = floor(float(Device.dwHeight) / 2.0f);
+    float bloom_w = floor(float(RenderScreenWidth())  / 2.0f);
+    float bloom_h = floor(float(RenderScreenHeight()) / 2.0f);
 
     u32 Offset = 0;
 

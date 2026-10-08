@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "RenderDimensions.h"
 
 void CRenderTarget::phase_nightvision()
 {
@@ -8,8 +9,8 @@ void CRenderTarget::phase_nightvision()
 
 	float d_Z = EPS_S;
 	float d_W = 1.0f;
-	float w = float(Device.dwWidth);
-	float h = float(Device.dwHeight);
+	float w = float(RenderScreenWidth());
+	float h = float(RenderScreenHeight());
 
 	Fvector2 p0, p1;
 #if defined(USE_DX10) || defined(USE_DX11)	
@@ -23,7 +24,11 @@ void CRenderTarget::phase_nightvision()
 	//////////////////////////////////////////////////////////////////////////
 	//Set MSAA/NonMSAA rendertarget
 #if defined(USE_DX10) || defined(USE_DX11)
+#if defined(USE_DX11)
+    ref_rt& dest_rt = PostprocessColor();
+#else
 	ref_rt& dest_rt = RImplementation.o.dx10_msaa ? rt_Generic : rt_Color;
+#endif
 	u_setrt(dest_rt, nullptr, nullptr, nullptr);
 #else
 	u_setrt(rt_Generic_0, nullptr, nullptr, nullptr);
@@ -48,7 +53,11 @@ void CRenderTarget::phase_nightvision()
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 	
 #if defined(USE_DX10) || defined(USE_DX11)
+#if defined(USE_DX11)
+    HW.pContext->CopyResource(PostprocessSource()->pSurface, dest_rt->pSurface);
+#else
 	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
+#endif
 #endif
 };
 
@@ -62,8 +71,8 @@ void CRenderTarget::phase_fakescope()
 
 	float d_Z = EPS_S;
 	float d_W = 1.0f;
-	float w = float(Device.dwWidth);
-	float h = float(Device.dwHeight);
+	float w = float(RenderScreenWidth());
+	float h = float(RenderScreenHeight());
 
 	Fvector2 p0, p1;
 #if defined(USE_DX10) || defined(USE_DX11)	
@@ -77,7 +86,11 @@ void CRenderTarget::phase_fakescope()
 	//////////////////////////////////////////////////////////////////////////
 	//Set MSAA/NonMSAA rendertarget
 #if defined(USE_DX10) || defined(USE_DX11)
+#if defined(USE_DX11)
+    ref_rt& dest_rt = PostprocessColor();
+#else
 	ref_rt& dest_rt = RImplementation.o.dx10_msaa ? rt_Generic : rt_Color;
+#endif
 	u_setrt(dest_rt, nullptr, nullptr, nullptr);
 
 	RCache.set_CullMode(CULL_NONE);
@@ -98,7 +111,11 @@ void CRenderTarget::phase_fakescope()
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
+#if defined(USE_DX11)
+    HW.pContext->CopyResource(PostprocessSource()->pSurface, dest_rt->pSurface);
+#else
 	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
+#endif
 #else
 	//Main pass (we avoid write-read from the same buffer)
 	u_setrt(rt_Generic_PingPong, nullptr, nullptr, nullptr);
@@ -153,8 +170,8 @@ void CRenderTarget::phase_heatvision()
 
 	float d_Z = EPS_S;
 	float d_W = 1.0f;
-	float w = float(Device.dwWidth);
-	float h = float(Device.dwHeight);
+	float w = float(RenderScreenWidth());
+	float h = float(RenderScreenHeight());
 
 	Fvector2 p0, p1;
 #if defined(USE_DX10) || defined(USE_DX11)	
@@ -168,7 +185,11 @@ void CRenderTarget::phase_heatvision()
 	//////////////////////////////////////////////////////////////////////////
 	//Set MSAA/NonMSAA rendertarget
 #if defined(USE_DX10) || defined(USE_DX11)
+#if defined(USE_DX11)
+    ref_rt& dest_rt = PostprocessColor();
+#else
 	ref_rt& dest_rt = RImplementation.o.dx10_msaa ? rt_Generic : rt_Color;
+#endif
 	u_setrt(dest_rt, nullptr, nullptr, nullptr);
 #else
 	u_setrt(rt_Generic_0, nullptr, nullptr, nullptr);
@@ -193,7 +214,11 @@ void CRenderTarget::phase_heatvision()
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
 #if defined(USE_DX10) || defined(USE_DX11)
+#if defined(USE_DX11)
+    HW.pContext->CopyResource(PostprocessSource()->pSurface, dest_rt->pSurface);
+#else
 	HW.pContext->CopyResource(rt_Generic_0->pTexture->surface_get(), dest_rt->pTexture->surface_get());
+#endif
 #endif
 };
 //--DSR-- HeatVision_start

@@ -1,0 +1,7 @@
+#include "common.h"
+#include "dlss_cas.h"
+
+float4 main(p_screen I) : SV_Target
+{
+    return DlssCas(I.tc0);
+}

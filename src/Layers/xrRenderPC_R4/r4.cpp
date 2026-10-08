@@ -125,8 +125,10 @@ static class cl_pos_decompress_params : public R_constant_setup
 		float VertTan = -1.0f * tanf(deg2rad(Device.fFOV / 2.0f));
 		float HorzTan = - VertTan / Device.fASPECT;
 
-		RCache.set_c(C, HorzTan, VertTan, (2.0f * HorzTan) / (float)Device.dwWidth,
-		             (2.0f * VertTan) / (float)Device.dwHeight);
+		const float sx = 2.0f * HorzTan / RenderScreenWidth();
+		const float sy = 2.0f * VertTan / RenderScreenHeight();
+		const auto jitter = dlss::RasterJitter();
+		RCache.set_c(C, HorzTan + jitter.x * sx, VertTan + jitter.y * sy, sx, sy);
 	}
 } binder_pos_decompress_params;
 
@@ -134,8 +136,8 @@ static class cl_pos_decompress_params2 : public R_constant_setup
 {
 	virtual void setup(R_constant* C)
 	{
-		RCache.set_c(C, (float)Device.dwWidth, (float)Device.dwHeight, 1.0f / (float)Device.dwWidth,
-		             1.0f / (float)Device.dwHeight);
+		RCache.set_c(C, float(RenderScreenWidth()), float(RenderScreenHeight()), 1.0f / RenderScreenWidth(),
+		             1.0f / RenderScreenHeight());
 	}
 } binder_pos_decompress_params2;
 
@@ -540,7 +542,7 @@ void CRender::create()
 	GMBase.initialize();
 	FluidManager.Initialize(70, 70, 70);
 	//	FluidManager.Initialize( 100, 100, 100 );
-	FluidManager.SetScreenSize(Device.dwWidth, Device.dwHeight);
+	FluidManager.SetScreenSize(dlss::RenderWidth(), dlss::RenderHeight());
 
 	Device.ModelDefferClear = xr_make_delegate(Models, &CModelPool::DeleteQueuedDeffer);
 }
@@ -589,7 +591,7 @@ void CRender::reset_end()
 	}
 	//-AVO
 
-	FluidManager.SetScreenSize(Device.dwWidth, Device.dwHeight);
+	FluidManager.SetScreenSize(dlss::RenderWidth(), dlss::RenderHeight());
 
 	// Set this flag true to skip the first render frame,
 	// that some data is not ready in the first frame (for example device camera position)
