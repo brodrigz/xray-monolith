@@ -43,7 +43,11 @@ try
     Destroy();
     m_log = log;
     if (!device || !render.Valid() ||
-        !display.Valid() || render.width > display.width || render.height > display.height) return false;
+        !display.Valid() || render.width > display.width || render.height > display.height)
+    {
+        if (m_log) m_log("FSR3 creation requires a D3D11 device and valid render/display dimensions", unsigned(E_INVALIDARG));
+        return false;
+    }
     if (device->GetFeatureLevel() < D3D_FEATURE_LEVEL_11_1)
     {
         if (m_log) m_log("FSR3 requires D3D feature level 11.1; retaining native resolution", unsigned(DXGI_ERROR_UNSUPPORTED));

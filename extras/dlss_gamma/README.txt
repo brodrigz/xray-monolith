@@ -14,6 +14,8 @@ Audited enabled loose-file providers in G.A.M.M.A. Co-op, 2026-10-07:
     deffer_impl_flat.ps, ssfx_ao.ps, ssfx_il.ps, ssfx_sss_ext.ps
   189- Beef's NVG - theRealBeef:
     night_vision.h
+  Optional WearableDevices:
+    wd_body.vs (body and alpha-tested chassis/bracer materials)
   New integration files:
     dlss_contract.h, dlss_copy.ps, dlss_cas.h, dlss_sharpen.ps, dlss_ui_depth.ps
     scripts/modxml_dlss_options.script
@@ -54,6 +56,26 @@ display resolution. dlss_ui_depth.ps supplies unjittered occlusion depth so
 hands/casing still hide the screen. Update BOTH binaries and this patch; older
 patches without that shader are rejected with an explicit upscaler log message.
 The flat 2D PDA/menu already renders after the scene at display resolution.
+
+For WearableDevices, place this compatibility override below WearableDevices
+in MO2's left pane. Its chassis/bracer meshes already pass through DLSS/FSR;
+wd_body.vs restores their raster jitter while either upscaler is active, keeping
+motion-vector positions unjittered. The mod intentionally disabled this jitter
+for SSS TAA. Upscaling Off retains that behavior. Screen widgets and covering
+glass keep the engine's existing native-resolution pass. This shader update
+works with the 0.3 executables; no additional engine rebuild is required.
+The override is unused when WearableDevices materials are not loaded.
+The user confirmed this override resolved the chassis/bracer pixelation in-game.
+
+Activation/runtime failures produce red console/log messages and a persistent
+red on-screen warning in release builds, including in menus. The warning names
+the failed method, gives the reason and recovery action, and identifies native
+rendering or spatial-upscale fallback. It clears after the first successful
+scene evaluation or after applying Upscaling Off. Debug statistics and -xclsx
+do not hide this renderer warning. Initialization alone is not confirmation:
+the green console message "[DLSS] ACTIVE" / "[FSR3] ACTIVE" confirms that the
+first scene evaluation actually succeeded. Errors are logged on failure, not
+repeated each frame; the warning stays visible while the failure persists.
 
 This is a profile-specific experimental override, not a generic SSS distribution.
 Other versions or higher-priority overrides require re-merging and testing.

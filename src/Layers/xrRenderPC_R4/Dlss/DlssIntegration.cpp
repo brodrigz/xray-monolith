@@ -3,6 +3,7 @@
 #include "DlssD3D11.h"
 #include "Fsr3D3D11.h"
 #include "../../../xrEngine/igame_persistent.h"
+#include "../../../xrEngine/RendererError.h"
 
 namespace
 {
@@ -20,10 +21,28 @@ Fvector lastPosition, lastDirection;
 float lastFov = 0;
 bool haveCamera = false;
 bool reportedEvaluation = false;
+string512 backendError = {};
 
-void LogDlss(const char* stage, unsigned result) { Msg("! [DLSS] %s (0x%08X)", stage, result); }
-void LogFsr(const char* stage, unsigned result) { Msg("! [FSR3] %s (0x%08X)", stage, result); }
 const char* Method() { return useFsr ? "FSR3" : "DLSS"; }
+void LogBackendError(const char* method, const char* stage, unsigned result)
+{
+    xr_sprintf(backendError, "%s (0x%08X)", stage, result);
+    Msg("! [%s] %s", method, backendError);
+    string128 summary;
+    xr_sprintf(summary, "[%s] Renderer error", method);
+    SetRendererError(summary, backendError, "See the console/log for details. Reapply Upscaling or switch it Off in Video settings.");
+}
+void LogDlss(const char* stage, unsigned result) { LogBackendError("DLSS", stage, result); }
+void LogFsr(const char* stage, unsigned result) { LogBackendError("FSR3", stage, result); }
+void ActivationFailed(const char* reason, const char* recovery)
+{
+    string128 summary;
+    xr_sprintf(summary, "[%s] NOT ACTIVE - rendering at native resolution", Method());
+    Msg("! %s: %s", summary, reason);
+    Msg("! [%s] %s", Method(), recovery);
+    SetRendererError(summary, reason, recovery);
+}
+const char* BackendReason(const char* fallback) { return backendError[0] ? backendError : fallback; }
 void ResetHistory() { backend.ResetHistory(); fsrBackend.ResetHistory(); }
 }
 
@@ -36,18 +55,34 @@ void InitializeTargets()
 {
     ReleaseTargets();
     renderSize = {Device.dwWidth, Device.dwHeight};
-    if (!ps_r_upscaler || (ps_r_upscaler == 1 && !ps_r_dlss_quality)) return;
+    backendError[0] = 0;
+    if (!ps_r_upscaler || (ps_r_upscaler == 1 && !ps_r_dlss_quality))
+    {
+        SetRendererError(nullptr);
+        Msg("[Upscaler] Off: rendering at native resolution.");
+        return;
+    }
     useFsr = ps_r_upscaler == 2;
     string_path marker;
-    if (!RImplementation.o.ssfx_motionvectors || !FS.exist(marker, "$game_shaders$", "r3\\dlss_contract.h") ||
-        !FS.exist(marker, "$game_shaders$", "r3\\dlss_ui_depth.ps"))
+    for (const char* shader : {"r3\\screenspace_mvectors.h", "r3\\dlss_contract.h", "r3\\dlss_ui_depth.ps",
+        "r3\\dlss_copy.ps", "r3\\dlss_sharpen.ps", "r3\\dlss_cas.h"})
     {
-        Msg("! [%s] Disabled: update the matching SSS 23 temporal-upscaling shader override (dlss_contract.h and dlss_ui_depth.ps required).", Method());
+        if (FS.exist(marker, "$game_shaders$", shader)) continue;
+        string256 reason;
+        xr_sprintf(reason, "Required shader is missing: %s", shader);
+        ActivationFailed(reason, "Install the shader compatibility patch matching this engine, then restart the game.");
+        return;
+    }
+    if (!RImplementation.o.ssfx_motionvectors)
+    {
+        ActivationFailed("SSS motion vectors are unavailable.",
+            "Install the matching SSS 23 shader compatibility patch, then restart the game.");
         return;
     }
     if (RImplementation.o.dx10_msaa)
     {
-        Msg("! [%s] Disabled: turn MSAA off and run vid_restart.", Method());
+        ActivationFailed("MSAA is enabled and cannot be combined with temporal upscaling.",
+            "Turn MSAA Off in Video settings and Apply again (or run vid_restart).");
         return;
     }
     Size size;
@@ -56,19 +91,49 @@ void InitializeTargets()
     {
         // Release NGX as well when switching methods; FSR does not require NVIDIA.
         backend.Shutdown();
-        if (!fsr3::D3D11Backend::OptimalSize(ps_r_fsr3_quality, display, size) ||
-            !fsrBackend.Create(HW.pDevice, size, display, RImplementation.o.dx11_hdr10, LogFsr)) return;
+        if (!fsr3::D3D11Backend::OptimalSize(ps_r_fsr3_quality, display, size))
+        {
+            ActivationFailed("Could not determine the FSR 3 render resolution.",
+                "Select a valid display resolution and FSR 3 quality, then Apply again.");
+            return;
+        }
+        if (!fsrBackend.Create(HW.pDevice, size, display, RImplementation.o.dx11_hdr10, LogFsr))
+        {
+            ActivationFailed(BackendReason("FSR 3 context creation failed."),
+                "FSR 3 requires Direct3D feature level 11.1. Check the console/log, then reapply or switch Upscaling Off.");
+            return;
+        }
     }
     else
     {
         string_path cache;
         FS.update_path(cache, "$app_data_root$", "");
         wchar_t wideCache[MAX_PATH] = {};
-        if (!MultiByteToWideChar(CP_ACP, 0, cache, -1, wideCache, MAX_PATH)) return;
-        if (!backend.Initialize(HW.pDevice, wideCache, LogDlss)) return;
+        if (!MultiByteToWideChar(CP_ACP, 0, cache, -1, wideCache, MAX_PATH))
+        {
+            LogDlss("Cannot convert the application-data path for NGX", GetLastError());
+            ActivationFailed(backendError, "Check the application-data path in fsgame.ltx, then restart the game.");
+            return;
+        }
+        if (!backend.Initialize(HW.pDevice, wideCache, LogDlss))
+        {
+            ActivationFailed(BackendReason("NVIDIA NGX initialization failed."),
+                "Check RTX GPU/driver support and nvngx_dlss.dll beside the executable, then restart the game.");
+            return;
+        }
         const auto quality = static_cast<Quality>(ps_r_dlss_quality);
-        if (!backend.OptimalSize(quality, display, size) ||
-            !backend.Create(quality, size, display, RImplementation.o.dx11_hdr10, static_cast<Preset>(ps_r_dlss_preset))) return;
+        if (!backend.OptimalSize(quality, display, size))
+        {
+            ActivationFailed(BackendReason("Could not determine the DLSS render resolution."),
+                "Select a valid display resolution and DLSS quality, then Apply again.");
+            return;
+        }
+        if (!backend.Create(quality, size, display, RImplementation.o.dx11_hdr10, static_cast<Preset>(ps_r_dlss_preset)))
+        {
+            ActivationFailed(BackendReason("DLSS feature creation failed."),
+                "Check the console/log and GPU driver/runtime. Reapply Upscaling or switch it Off.");
+            return;
+        }
     }
 
     D3D11_TEXTURE2D_DESC depth = {};
@@ -85,16 +150,17 @@ void InitializeTargets()
     if (FAILED(result))
     {
         (useFsr ? LogFsr : LogDlss)("Scene depth allocation failed; retaining native resolution", result);
+        ActivationFailed(backendError, "Check GPU memory/device errors in the console/log, then restart the game.");
         ReleaseTargets();
         return;
     }
     renderSize = size;
     configured = true;
     if (useFsr)
-        Msg("[FSR3] 3.1.2 DX11 upscaler: quality=%u scene=%ux%u display=%ux%u; changes require vid_restart",
+        Msg("[FSR3] Initialized; awaiting first scene evaluation: quality=%u scene=%ux%u display=%ux%u",
             ps_r_fsr3_quality, size.width, size.height, display.width, display.height);
     else
-        Msg("[DLSS] quality=%u requested preset=%u scene=%ux%u display=%ux%u; changes require vid_restart",
+        Msg("[DLSS] Initialized; awaiting first scene evaluation: quality=%u requested preset=%u scene=%ux%u display=%ux%u",
             ps_r_dlss_quality, ps_r_dlss_preset, size.width, size.height, display.width, display.height);
 }
 
@@ -180,12 +246,21 @@ bool Evaluate(ID3D11Texture2D* color, ID3D11Texture2D* motion)
     const bool success = useFsr ? fsrBackend.Evaluate(frame) : backend.Evaluate(frame);
     if (success && !reportedEvaluation)
     {
-        Msg("[%s] First scene evaluation succeeded: frame=%u, scene=%ux%u, jitter=(%.4f,%.4f), MV scale=(-%u,-%u)",
+        SetRendererError(nullptr);
+        Msg("- [%s] ACTIVE - first scene evaluation succeeded: frame=%u, scene=%ux%u, jitter=(%.4f,%.4f), MV scale=(-%u,-%u)",
             Method(), Device.dwFrame, RenderWidth(), RenderHeight(), rasterJitter.x, rasterJitter.y, RenderWidth(), RenderHeight());
         reportedEvaluation = true;
     }
     else if (!success)
-        Msg("! [%s] Evaluation disabled until vid_restart; using spatial upscale (no stale temporal output).", Method());
+    {
+        string128 summary;
+        xr_sprintf(summary, "[%s] STOPPED - using spatial upscale without temporal reconstruction", Method());
+        const char* reason = BackendReason("Scene evaluation failed.");
+        const char* recovery = "Check the console/log. Reapply Upscaling (vid_restart) or switch it Off in Video settings.";
+        Msg("! %s: %s", summary, reason);
+        Msg("! [%s] %s", Method(), recovery);
+        SetRendererError(summary, reason, recovery);
+    }
     return success;
 }
 }

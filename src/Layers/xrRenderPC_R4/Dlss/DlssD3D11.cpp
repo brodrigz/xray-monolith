@@ -32,7 +32,11 @@ bool D3D11Backend::Initialize(ID3D11Device* device, const wchar_t* cachePath, Lo
     if (m_initialized && m_device.Get() == device) return m_parameters != nullptr;
     Shutdown();
     m_log = log;
-    if (!device || !cachePath || !*cachePath) return false;
+    if (!device || !cachePath || !*cachePath)
+    {
+        if (m_log) m_log("DLSS initialization requires a D3D11 device and a valid cache path", unsigned(E_INVALIDARG));
+        return false;
+    }
 
     ComPtr<ID3D11Device1> device1;
     ComPtr<ID3D11DeviceContext> immediate;
@@ -80,14 +84,22 @@ bool D3D11Backend::Initialize(ID3D11Device* device, const wchar_t* cachePath, Lo
 bool D3D11Backend::OptimalSize(Quality quality, Size display, Size& render)
 {
     render = {};
-    if (!m_parameters || quality == Quality::Off || !display.Valid()) return false;
+    if (!m_parameters || quality == Quality::Off || quality > Quality::UltraPerformance || !display.Valid())
+    {
+        if (m_log) m_log("DLSS optimal dimensions: missing capabilities, invalid quality or display size", unsigned(E_INVALIDARG));
+        return false;
+    }
     if (quality == Quality::DLAA) { render = display; return true; }
     Size optimal, minimum, maximum;
     float sharpness;
     if (!Check(NGX_DLSS_GET_OPTIMAL_SETTINGS(m_parameters, display.width, display.height, NgxQuality(quality),
         &optimal.width, &optimal.height, &maximum.width, &maximum.height,
         &minimum.width, &minimum.height, &sharpness), "DLSS optimal dimensions")) return false;
-    if (!optimal.Valid() || optimal.width > display.width || optimal.height > display.height) return false;
+    if (!optimal.Valid() || optimal.width > display.width || optimal.height > display.height)
+    {
+        if (m_log) m_log("NGX returned invalid DLSS render dimensions", unsigned(E_INVALIDARG));
+        return false;
+    }
     render = optimal;
     return true;
 }
@@ -95,8 +107,12 @@ bool D3D11Backend::OptimalSize(Quality quality, Size display, Size& render)
 bool D3D11Backend::Create(Quality quality, Size render, Size display, bool hdr, Preset preset)
 {
     ReleaseFeature();
-    if (!m_parameters || !ValidPreset(preset) || quality == Quality::Off || !render.Valid() || !display.Valid() ||
-        render.width > display.width || render.height > display.height) return false;
+    if (!m_parameters || !ValidPreset(preset) || quality == Quality::Off || quality > Quality::UltraPerformance ||
+        !render.Valid() || !display.Valid() || render.width > display.width || render.height > display.height)
+    {
+        if (m_log) m_log("DLSS feature creation: invalid capabilities, quality, preset or dimensions", unsigned(E_INVALIDARG));
+        return false;
+    }
 
     D3D11_TEXTURE2D_DESC desc = {};
     desc.Width = display.width;
