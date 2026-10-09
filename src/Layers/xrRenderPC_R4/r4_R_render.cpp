@@ -70,6 +70,7 @@ void CRender::Render()
 	dx10_annotate_frame();
 	dlss::EndScene();
 	GMBase.RGraph.mapHUDNativeUi.clear(); // Never retain packets across views/menu/reset.
+	GMBase.RGraph.hasNativeHudAttachments = false;
 
 	rmNormal();
 
@@ -372,11 +373,12 @@ void CRender::render_forward()
 		GMBase.r_dsgraph_render_sorted(false); // strict-sorted geoms
 		g_pGamePersistent->Environment().RenderLast(); // rain/thunder-bolts
 
-		// Item and camera attachment UI draws before the sorted HUD so nearer glass and the post chain cover it
+		// Defer item/attachment UI only when wearable screen glass was captured
+		// for this view. Other users keep their original UI timing and pass count.
 		if (g_hud)
 		{
 			PROF_EVENT("render_hud");
-			if (g_hud->RenderActiveItemUIQuery())
+			if (!GMBase.RGraph.hasNativeHudAttachments && g_hud->RenderActiveItemUIQuery())
 				GMBase.r_dsgraph_render_hud_ui();
 			if (g_hud->RenderCamAttachedUIQuery())
 				GMBase.r_dsgraph_render_cam_ui();

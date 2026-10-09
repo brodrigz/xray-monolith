@@ -250,8 +250,9 @@ namespace R_dsgraph
 		mapSorted<float, true, false, false, false> mapCamAttachedSorted;
 		mapDSGraphItems<float, false> mapWater;
 #ifdef USE_DX11
-		// PDA screen draws held outside the temporal scene, not the PDA casing.
+		// PDA screens and wearable screen glass held outside the temporal scene.
 		mapDSGraphItems<float, true> mapHUDNativeUi;
+		bool hasNativeHudAttachments = false;
 		mapDSGraphItems<float, true> mapScopeHUDSorted;
 		mapDSGraphItems<float, false> mapScopeHUD;
 #endif
@@ -315,6 +316,9 @@ namespace R_dsgraph
 		template<bool free = true>
 		IC void clear_hud()
 		{
+#ifdef USE_DX11
+			hasNativeHudAttachments = false;
+#endif
 			if constexpr (free)
 			{
 				mapHUD.clear_and_free();

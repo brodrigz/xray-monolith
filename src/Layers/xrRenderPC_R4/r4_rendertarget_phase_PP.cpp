@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "r4_rendertarget.h"
+#include "../../xrEngine/CustomHUD.h"
 
 void CRenderTarget::u_calc_tc_noise(Fvector2& p0, Fvector2& p1)
 {
@@ -151,17 +152,21 @@ void CRenderTarget::phase_dlss_postprocess()
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
 
-	if (!RImplementation.GMBase.RGraph.mapHUDNativeUi.empty())
+	// Only defer direct UI draws when wearable surfaces were found in this view.
+	// A normal weapon/device must not trigger an additional native depth pass.
+	const bool renderHudUi = RImplementation.GMBase.RGraph.hasNativeHudAttachments &&
+		g_hud && g_hud->RenderActiveItemUIQuery();
+	if (renderHudUi || !RImplementation.GMBase.RGraph.mapHUDNativeUi.empty())
 	{
 		if (!reported_native_ui)
 		{
-			Msg("[Upscaler] PDA screen drawn after reconstruction: native=%ux%u, scene=%ux%u, draws=%u",
+			Msg("[Upscaler] HUD UI drawn after reconstruction: native=%ux%u, scene=%ux%u, meshes=%u, item_ui=%u",
 				Device.dwWidth, Device.dwHeight, dlss::RenderWidth(), dlss::RenderHeight(),
-				unsigned(RImplementation.GMBase.RGraph.mapHUDNativeUi.size()));
+				unsigned(RImplementation.GMBase.RGraph.mapHUDNativeUi.size()), unsigned(renderHudUi));
 			reported_native_ui = true;
 		}
 		// Scene depth is render-sized and jittered. Reproject it into the existing
-		// native depth buffer before drawing the unjittered PDA screen. Keep its
+		// native depth buffer before drawing unjittered HUD screens. Keep their
 		// occlusion by hands/casing; never attach a render-sized DSV to a native RT.
 		u_setrt(rt_dlss_post_source, nullptr, nullptr, HW.pBaseZB);
 		RCache.set_Element(s_dlss_ui_depth->E[0]);
@@ -172,7 +177,7 @@ void CRenderTarget::phase_dlss_postprocess()
 		RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
 		RCache.set_ColorWriteEnable();
 		RCache.set_CullMode(CULL_CCW);
-		RImplementation.GMBase.r_dsgraph_render_native_ui();
+		RImplementation.GMBase.r_dsgraph_render_native_ui(renderHudUi);
 	}
 
 	if (ps_r2_mask_control.x > 0)

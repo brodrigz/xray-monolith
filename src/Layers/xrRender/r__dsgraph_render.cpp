@@ -321,16 +321,25 @@ void CDSGraphManager::r_dsgraph_render_ScopeSorted()  //  Redotix99: for 3D Shad
 #if RENDER == R_R4
 void CDSGraphManager::r_dsgraph_extract_native_ui()
 {
-	// Match the PDA render texture instead of a particular mod's shader name.
-	// Only the main HUD's sorted screen geometry is moved; scopes and world
-	// materials keep their existing render paths.
-	dlss::ExtractNativeUi(RGraph.mapHUDSorted.Sorted, RGraph.mapHUDNativeUi, [](const auto& item)
+	// Hold PDA screens and WearableDevices screen glass for the native pass.
+	// Attachment widgets draw directly through RenderActiveItemUI, outside these
+	// queues. Their glass must follow them instead of being baked into the scene.
+	RGraph.hasNativeHudAttachments = false;
+	dlss::ExtractNativeUi(RGraph.mapHUDSorted.Sorted, RGraph.mapHUDNativeUi, [this](const auto& item)
 	{
 		for (const auto& pass : item.pSE->passes)
 		{
 			if (!pass->T) continue;
 			for (const auto& texture : *pass->T)
-				if (texture.second && texture.second->cName == "$user$ui") return true;
+			{
+				if (!texture.second) continue;
+				if (texture.second->cName == "$user$ui") return true;
+				if (dlss::IsWearableScreenGlass(texture.second->cName.c_str()))
+				{
+					RGraph.hasNativeHudAttachments = true;
+					return true;
+				}
+			}
 		}
 		return false;
 	});
@@ -339,9 +348,12 @@ void CDSGraphManager::r_dsgraph_extract_native_ui()
 	dlss::RemoveNativeUiDuplicates(RGraph.mapHUDSorted.Distort, RGraph.mapHUDNativeUi);
 }
 
-void CDSGraphManager::r_dsgraph_render_native_ui()
+void CDSGraphManager::r_dsgraph_render_native_ui(bool renderHudUi)
 {
 	PROF_EVENT("r_dsgraph_render_native_ui");
+	// Draw widgets once, at display resolution with the unjittered HUD projection,
+	// before the sorted PDA/glass meshes, preserving the forward-pass ordering.
+	if (renderHudUi) r_dsgraph_render_hud_ui();
 	CHudInitializer initializer(true);
 	RImplementation.rmNear();
 	r_dsgraph_render_graph_sorted(RGraph.mapHUDNativeUi, true);

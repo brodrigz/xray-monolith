@@ -96,7 +96,7 @@ public:
 	void r_dsgraph_capture_hud();
 #if RENDER == R_R4
 	void r_dsgraph_extract_native_ui();
-	void r_dsgraph_render_native_ui();
+	void r_dsgraph_render_native_ui(bool renderHudUi);
 #endif
 	void r_dsgraph_render_hud();
 	void r_dsgraph_render_hud_ui();
