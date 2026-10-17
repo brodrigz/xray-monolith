@@ -4,7 +4,7 @@
     <string id="ui_mm_video_basic_upscaler"><text>Temporal upscaler</text></string>
     <string id="ui_mm_video_basic_upscaler_desc"><text>Select NVIDIA DLSS or AMD FSR upscaling. Off retains the native renderer and its existing anti-aliasing settings. All methods require MSAA off and the matching temporal shader override. Only methods supported by this GPU are listed, and only the selected method runs; its quality setting is below. The experimental DX12 executable adds AMD's DX12 runtime: FSR 4 on Radeon RX 7000/9000, listed as FSR 3.1 (DX12) on other GPUs. Apply restarts the renderer.</text></string>
     <string id="ui_mm_video_basic_fsr3_mode"><text>AMD FSR quality</text></string>
-    <string id="ui_mm_video_basic_fsr3_mode_desc"><text>Used when the temporal upscaler is FSR 3 or FSR 4. Native AA uses native resolution; Quality, Balanced, Performance and Ultra Performance use 1.5x, 1.7x, 2x and 3x scaling respectively. FSR 3 is native DX11 FSR 3.1.2 on any GPU. FSR 4 runs through the DX12 executable's AMD runtime. No NVIDIA runtime required. Replaces SSS TAA and SMAA while active. Apply restarts the renderer.</text></string>
+    <string id="ui_mm_video_basic_fsr3_mode_desc"><text>Used when the temporal upscaler is FSR 3 or FSR 4. Native AA uses native resolution; Ultra Quality, Quality, Balanced, Performance and Ultra Performance use 1.3x, 1.5x, 1.7x, 2x and 3x scaling respectively. FSR 3 is native DX11 FSR 3.1.2 on any GPU. FSR 4 runs through the DX12 executable's AMD runtime. No NVIDIA runtime required. Replaces SSS TAA and SMAA while active. Apply restarts the renderer.</text></string>
     <string id="ui_mm_lst_upscaler_fsr4"><text>AMD FSR 4 (DX12)</text></string>
     <string id="ui_mm_lst_upscaler_fsr_dx12"><text>AMD FSR 3.1 (DX12)</text></string>
     <string id="ui_mm_video_basic_dlss_sharpness"><text>Upscaling sharpening (CAS)</text></string>
@@ -13,11 +13,12 @@
     <string id="ui_mm_lst_upscaler_fsr3"><text>AMD FSR 3</text></string>
     <string id="ui_mm_lst_fsr3_native_aa"><text>Native AA</text></string>
     <string id="ui_mm_video_basic_dlss_mode"><text>NVIDIA DLSS quality</text></string>
-    <string id="ui_mm_video_basic_dlss_mode_desc"><text>DLAA renders at native resolution; Quality, Balanced, Performance and Ultra Performance upscale a smaller scene. Requires an RTX GPU, the NVIDIA DLSS runtime and the matching shader override. Turn MSAA off before enabling DLSS. DLSS replaces SSS TAA and SMAA while active. Apply restarts the renderer; Cancel leaves the current settings unchanged.</text></string>
+    <string id="ui_mm_video_basic_dlss_mode_desc"><text>DLAA renders at native resolution; Ultra Quality (1.3x), Quality, Balanced, Performance and Ultra Performance upscale a smaller scene. Requires an RTX GPU, the NVIDIA DLSS runtime and the matching shader override. Turn MSAA off before enabling DLSS. DLSS replaces SSS TAA and SMAA while active. Apply restarts the renderer; Cancel leaves the current settings unchanged.</text></string>
     <string id="ui_mm_video_basic_dlss_preset"><text>NVIDIA DLSS render preset</text></string>
     <string id="ui_mm_video_basic_dlss_preset_desc"><text>Selects the reconstruction model independently of scaling mode. Default lets NVIDIA select the recommended preset for each mode. J/K/L/M explicitly request that preset; NVIDIA driver overrides can affect the result. Requires the supplied DLSS 310.9.1 runtime. Apply restarts the renderer. Deprecated preset F is not offered.</text></string>
     <string id="ui_mm_lst_dlss_off"><text>Off</text></string>
     <string id="ui_mm_lst_dlss_dlaa"><text>DLAA (native)</text></string>
+    <string id="ui_mm_lst_dlss_ultra_quality"><text>Ultra Quality</text></string>
     <string id="ui_mm_lst_dlss_quality"><text>Quality</text></string>
     <string id="ui_mm_lst_dlss_balanced"><text>Balanced</text></string>
     <string id="ui_mm_lst_dlss_performance"><text>Performance</text></string>

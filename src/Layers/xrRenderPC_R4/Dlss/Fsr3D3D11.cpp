@@ -48,7 +48,12 @@ bool D3D11Backend::Check(FfxErrorCode result, const char* stage)
 bool D3D11Backend::OptimalSize(unsigned quality, dlss::Size display, dlss::Size& render)
 {
     render = {};
-    if (quality > 4 || !display.Valid()) return false;
+    if (quality > 5 || !display.Valid()) return false;
+    if (quality == 5) // r_fsr3_quality ultra_quality: no FSR quality mode, ~77% per axis
+    {
+        render = dlss::ScaledRender(display, dlss::UltraQualityRatio);
+        return render.width <= display.width && render.height <= display.height;
+    }
     if (ffxFsr3UpscalerGetRenderResolutionFromQualityMode(&render.width, &render.height,
         display.width, display.height, static_cast<FfxFsr3UpscalerQualityMode>(quality)) != FFX_OK) return false;
     return render.Valid() && render.width <= display.width && render.height <= display.height;

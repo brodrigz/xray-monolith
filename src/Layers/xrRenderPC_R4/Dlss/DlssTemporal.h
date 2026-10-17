@@ -6,7 +6,8 @@
 
 namespace dlss
 {
-enum class Quality : unsigned { Off, DLAA, Quality, Balanced, Performance, UltraPerformance };
+// Values are the r_dlss_quality token ids; UltraQuality was added last to keep saved ids.
+enum class Quality : unsigned { Off, DLAA, Quality, Balanced, Performance, UltraPerformance, UltraQuality };
 // NGX Super Resolution preset values. F is deprecated in runtime 310.9.1;
 // reserved presets are deliberately not exposed as working choices.
 enum class Preset : unsigned { Default = 0, J = 10, K = 11, L = 12, M = 13 };
@@ -25,6 +26,15 @@ struct Size
 };
 
 struct Offset { float x = 0, y = 0; };
+
+// Ultra Quality: 1/1.3 (~77%) of the display per axis, between DLAA and Quality.
+// Neither NGX nor FSR 3.1 defines this mode, so the render size is computed here.
+constexpr float UltraQualityRatio = 1.3f;
+inline Size ScaledRender(Size display, float ratio)
+{
+    return {std::max(1u, unsigned(std::lround(display.width / ratio))),
+        std::max(1u, unsigned(std::lround(display.height / ratio)))};
+}
 
 inline float Halton(unsigned index, unsigned base)
 {

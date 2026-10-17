@@ -144,14 +144,14 @@ local function add_options()
     local generation = generation_choices()
     local methods = upscaler_choices()
     local fsr_modes = content_for("r_fsr3_quality", {
-        {"native_aa", "fsr3_native_aa"}, {"quality", "dlss_quality"},
+        {"native_aa", "fsr3_native_aa"}, {"ultra_quality", "dlss_ultra_quality"}, {"quality", "dlss_quality"},
         {"balanced", "dlss_balanced"}, {"performance", "dlss_performance"},
         {"ultra_performance", "dlss_ultra_performance"},
     })
     -- Commands only exist in the matching DX11 renderer. Hide these controls
     -- with stock/other-renderer binaries instead of issuing unknown commands.
     local modes = content_for("r_dlss_quality", {
-        {"off", "dlss_off"}, {"dlaa", "dlss_dlaa"},
+        {"off", "dlss_off"}, {"dlaa", "dlss_dlaa"}, {"ultra_quality", "dlss_ultra_quality"},
         {"quality", "dlss_quality"}, {"balanced", "dlss_balanced"},
         {"performance", "dlss_performance"}, {"ultra_performance", "dlss_ultra_performance"},
     })
