@@ -1109,6 +1109,16 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 
 	InitSettings();
 	Msg(XRAY_MONOLITH_VERSION);
+	// Identifies these DLSS/FSR binaries in support logs, whatever the upscaler
+	// setting and before anything renderer-related can fail. Bump with releases.
+#if defined(XR_DX12_BRIDGE)
+	const char* const binaryVariant = "DX12 bridge";
+#elif defined(__AVX__)
+	const char* const binaryVariant = "DX11-AVX";
+#else
+	const char* const binaryVariant = "DX11";
+#endif
+	Msg("[DLSS/FSR] xray-monolith DLSS/FSR 0.61 (%s), built %s", binaryVariant, __DATE__);
 
 	{
 		FS_FileSet fset;
