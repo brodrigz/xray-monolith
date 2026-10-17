@@ -59,6 +59,8 @@ public:
     HRESULT GetRenderTargetView(ID3D11RenderTargetView** view) const;
     HRESULT FailGeneration(const char* reason);
     bool GenerationFailed() const { return m_fgFailed; }
+    // After an automatic disable, let FG start again when the player re-enables it.
+    void ClearGenerationFailure();
     // Acquire BEFORE recording/executing any frame commands that touch the shared targets.
     // Independent of the proxy's backbuffer index, which can change when FG is toggled.
     HRESULT AcquireFrame();

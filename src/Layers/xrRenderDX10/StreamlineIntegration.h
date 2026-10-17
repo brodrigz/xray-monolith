@@ -45,6 +45,8 @@ public:
     bool HasFrame() const { return m_frame != nullptr; }
     UINT PresentedFrames() const { return m_presentedFrames; }
     bool CanGenerate(UINT width, UINT height) const { return !m_failed && width >= m_minDimension && height >= m_minDimension; }
+    // After DisableAfterFailure: allow DLSS-G again and resend options on the next switch.
+    void ClearFailure() { m_failed = false; m_optionsSet = false; }
     bool SupportsVSync() const { return m_supportsVSync; }
     const char* FailureStage() const { return m_failureStage; }
 

@@ -565,7 +565,12 @@ HRESULT D3D12PresentBridge::SubmitFrame()
     if (!m_acquired || m_submitted) return Check(E_UNEXPECTED, "Acquire/render/submit/present order");
     bool generate = NeedsFGInputs() && m_sceneValid && m_hudlessValid;
     const bool streamline = m_runtimeKind == PresentRuntime::Streamline && m_streamline.IsReady();
-    if (streamline && !m_streamline.SetEnabled(generate)) return Check(E_FAIL, "FG mode");
+    if (streamline && !m_streamline.SetEnabled(generate))
+    {
+        // Turn FG off and keep presenting; fatal only if DLSS-G cannot be disabled.
+        BRIDGE_CHECK(FailGeneration("DLSS-G on/off switch"));
+        generate = false;
+    }
     const UINT index = m_swapChain->GetCurrentBackBufferIndex();
     if (index >= m_slots.size()) return Check(E_UNEXPECTED, "Invalid D3D12 backbuffer index");
     auto& slot = m_slots[m_currentSlot];
@@ -905,7 +910,8 @@ HRESULT D3D12PresentBridge::SuspendGeneration()
 {
     if (m_runtimeKind == PresentRuntime::Plain) return WaitIdle();
     if (m_logger) m_logger("[FG DIAG] SuspendGeneration begin: requesting Off, then draining GPU work");
-    if (FAILED(SetGeneration(false))) return Check(E_FAIL, "Suspend FG for window transition");
+    // A runtime that will not suspend is disabled instead (fatal only if that fails too).
+    if (FAILED(SetGeneration(false))) BRIDGE_CHECK(FailGeneration("Suspend FG for window transition"));
     m_sceneValid = m_hudlessValid = false;
     m_resetHistory = true;
     const HRESULT result = WaitIdle();
@@ -1002,7 +1008,7 @@ HRESULT D3D12PresentBridge::AfterPresent()
             m_fgFailed = true;
             m_submittedFG = false;
             m_resetHistory = true;
-            if (m_logger) m_logger("! [DLSS FG] Disabled after a runtime failure; continuing without frame generation. Restart the game to retry FG. FG presentation statistics unavailable.");
+            if (m_logger) m_logger("! [DLSS FG] Disabled after a runtime failure; continuing without frame generation; it can be turned on again in Video settings.");
         }
         if (m_submittedFG)
         {
@@ -1054,6 +1060,17 @@ HRESULT D3D12PresentBridge::AfterPresent()
     return S_OK;
 }
 
+// The player turned frame generation back on after an automatic disable. FG work
+// was drained and the runtime switched off by FailGeneration/AfterPresent; start
+// again from clean state (DLSS-G re-allocates, FG inputs are rebuilt on capture).
+void D3D12PresentBridge::ClearGenerationFailure()
+{
+    if (!m_fgFailed) return;
+    m_fgFailed = false;
+    m_resetHistory = true;
+    if (m_runtimeKind == PresentRuntime::Streamline) m_streamline.ClearFailure();
+}
+
 HRESULT D3D12PresentBridge::FailGeneration(const char* reason)
 {
     if (m_fgFailed) return S_OK;
@@ -1069,7 +1086,7 @@ HRESULT D3D12PresentBridge::FailGeneration(const char* reason)
     if (m_logger)
     {
         char message[512]{};
-        snprintf(message,sizeof(message),"! [%s FG] Disabled: %s. Continuing normal presentation; restart the game to retry.",
+        snprintf(message,sizeof(message),"! [%s FG] Disabled: %s. Continuing without frame generation; it can be turned on again in Video settings.",
             m_runtimeKind == PresentRuntime::Fsr ? "FSR" : "DLSS", reason);
         m_logger(message);
     }
