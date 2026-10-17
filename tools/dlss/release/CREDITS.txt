@@ -18,6 +18,22 @@ FSR upscaler API version 3.1.2; community DX11 backend vendored from OGSR's
 dependency tree. Not AMD's officially supported DX12/Vulkan backend.
 AMD MIT license and accompanying third-party notices are included.
 
+DX12 presentation bridge (AnomalyDX12.exe, frame generation):
+Transport adapted from OGSR's D3D12PresentBridge, revision 6443f8426.
+Credits: OGSR team and xrSimpAI.
+
+NVIDIA Streamline 2.14.16 (DLSS Frame Generation 310.9.16, Reflex):
+https://github.com/NVIDIA-RTX/Streamline
+Unmodified NVIDIA-signed runtime; its license and notices are included.
+
+AMD FidelityFX SDK 2.3.0 (DX12 FSR upscaler and frame generation):
+https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK (tag v2.3.0)
+Unmodified AMD-signed runtime; MIT license included.
+
+Microsoft DirectX 12 Agility SDK 1.619.6 (D3D12Core.dll):
+NuGet package Microsoft.Direct3D.D3D12. Only the redistributable
+D3D12Core.dll is included, under its license.
+
 Shader providers (original author notices retained):
 Ascii1457 — Screen Space Shaders, audited Update23_5
 https://www.moddb.com/addons/screen-space-shaders

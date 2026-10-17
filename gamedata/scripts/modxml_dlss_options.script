@@ -11,10 +11,63 @@ local function current_method()
     return method
 end
 
+-- "fsr" rows serve both FSR 3 (DX11) and FSR 4 (DX12 executable).
+local function method_matches(needed, method)
+    if not needed or needed == method then return true end
+    if needed == "either" then return method ~= "off" end
+    return needed == "fsr" and (method == "fsr3" or method == "fsr4")
+end
+
 local function find_row(tree, id)
     for _, row in ipairs(tree.gr or {}) do
         if row.id == id then return row end
     end
+end
+
+-- The engine lists only choices this GPU/runtime supports (plus the current value),
+-- so filtering by its token list is the hardware guard.
+local function content_for(command, choices)
+    local tokens = get_console():get_token_list(command)
+    local supported, content = {}, {}
+    if tokens then
+        for _, token in ipairs(tokens) do supported[token] = true end
+    end
+    for _, choice in ipairs(choices) do
+        if supported[choice[1]] then content[#content + 1] = choice end
+    end
+    return content
+end
+
+-- "dlss=1 fsr3=1 fsr_dx12=3.1.5 fg_dlss=restart fg_fsr=3.1.6" from r_upscaler_support.
+local function support()
+    local caps = {}
+    local text = get_console_cmd(0, "r_upscaler_support")
+    if type(text) == "string" then
+        for key, value in string.gmatch(text, "([%w_]+)=([%w%.]+)") do caps[key] = value end
+    end
+    return caps
+end
+
+local function major(version)
+    return tonumber(string.match(version or "", "^(%d+)%.")) or 0
+end
+
+-- Labels say what actually runs: FSR 4 only on supported Radeon GPUs.
+local function upscaler_choices()
+    local caps = support()
+    return content_for("r_upscaler", {
+        {"off", "dlss_off"}, {"dlss", "upscaler_dlss"}, {"fsr3", "upscaler_fsr3"},
+        {"fsr4", major(caps.fsr_dx12) >= 4 and "upscaler_fsr4" or "upscaler_fsr_dx12"},
+    })
+end
+
+local function generation_choices()
+    local caps = support()
+    return content_for("r_frame_generation", {
+        {"off", "dlss_off"},
+        {"dlss", caps.fg_dlss == "restart" and "fg_dlss_2x_restart" or "fg_dlss_2x"},
+        {"fsr", major(caps.fg_fsr) >= 4 and "fg_fsr4_2x" or "fg_fsr_2x"},
+    })
 end
 
 local function install_dynamic_options()
@@ -25,14 +78,18 @@ local function install_dynamic_options()
         self._upscaler_refresh = nil
         local selector = path == "video/basic" and find_row(tree, "upscaler")
         if not selector then return reset(self, tree, path, flags) end
+        -- Support can change in a session (e.g. Streamline needs a restart after
+        -- FSR frame generation was used): rebuild these choices on every show.
+        selector.content = upscaler_choices()
+        local generation = find_row(tree, "frame_generation")
+        if generation then generation.content = generation_choices() end
         -- Ask the options framework for its PENDING value, not the live console.
         local method = self:GetCurrentValue(path, selector.id, selector)
         local visible = {}
         for key, value in pairs(tree) do visible[key] = value end
         visible.gr = {}
         for _, row in ipairs(tree.gr) do
-            local needed = row.upscaler_method
-            if not needed or needed == method or (needed == "either" and method ~= "off") then
+            if method_matches(row.upscaler_method, method) then
                 visible.gr[#visible.gr + 1] = row
             end
         end
@@ -83,22 +140,9 @@ local function install_dynamic_options()
     end
 end
 
-local function content_for(command, choices)
-    local tokens = get_console():get_token_list(command)
-    local supported, content = {}, {}
-    if tokens then
-        for _, token in ipairs(tokens) do supported[token] = true end
-    end
-    for _, choice in ipairs(choices) do
-        if supported[choice[1]] then content[#content + 1] = choice end
-    end
-    return content
-end
-
 local function add_options()
-    local methods = content_for("r_upscaler", {
-        {"off", "dlss_off"}, {"dlss", "upscaler_dlss"}, {"fsr3", "upscaler_fsr3"},
-    })
+    local generation = generation_choices()
+    local methods = upscaler_choices()
     local fsr_modes = content_for("r_fsr3_quality", {
         {"native_aa", "fsr3_native_aa"}, {"quality", "dlss_quality"},
         {"balanced", "dlss_balanced"}, {"performance", "dlss_performance"},
@@ -116,7 +160,9 @@ local function add_options()
         {"l", "dlss_l"}, {"m", "dlss_m"},
     })
     if #modes == 0 or #presets == 0 then return end
-    local dual = #methods == 3 and #fsr_modes > 0
+    -- A method selector whenever the engine has one: on AMD GPUs DLSS is not
+    -- offered, leaving Off plus the FSR methods.
+    local dual = #methods >= 2 and #fsr_modes > 0
     if dual then
         -- Off belongs only to the method selector, not the quality selector.
         for i = #modes, 1, -1 do
@@ -159,9 +205,37 @@ local function add_options()
                         table.insert(group.gr, position + 2, {
                             id = "fsr3_mode", type = "list", val = 0,
                             cmd = "r_fsr3_quality", content = fsr_modes, vid = true,
-                            upscaler_method = "fsr3",
+                            upscaler_method = "fsr",
                         })
                     end
+                    if #generation > 0 then
+                        -- Switching between DLSS and FSR rebuilds the DX12 swapchain.
+                        -- Frame generation needs an upscaler, so it is shown only with one.
+                        -- After the upscaler rows: selector, DLSS/FSR quality, preset, sharpening.
+                        table.insert(group.gr, position + (dual and 5 or 3), {
+                            id = "frame_generation", type = "list", val = 0,
+                            cmd = "r_frame_generation", content = generation, vid = true,
+                            upscaler_method = dual and "either" or nil,
+                        })
+                    end
+                    return
+                end
+            end
+        end
+    end
+end
+
+-- AnomalyDX12.exe (the only build with frame generation) renders with the DX11
+-- renderer and presents through DX12. Only the label changes; the console
+-- value stays renderer_r4 so saved configs and scripts keep working.
+local function label_dx12_renderer()
+    if not get_console():get_token_list("r_frame_generation") then return end
+    for _, top in ipairs(ui_options.options) do
+        if top.id == "video" and top.gr then
+            for _, group in ipairs(top.gr) do
+                if group.id == "basic" then
+                    local row = find_row(group, "renderer")
+                    if row then row.content = {{"renderer_r4", "renderer_r4_dx12_bridge"}} end
                     return
                 end
             end
@@ -177,6 +251,7 @@ function on_xml_read()
     -- GAMMA's indexer also appends radio playlist controls.
     local original = ui_options.init_opt_coder
     ui_options.init_opt_coder = function(...)
+        label_dx12_renderer()
         add_options()
         return original(...)
     end

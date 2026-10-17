@@ -1,0 +1,72 @@
+TITLE
+DLSS & FSR 3.1 for GAMMA — Experimental DX11 MT Binaries
+
+SHORT DESCRIPTION
+Experimental native DX11 DLSS Super Resolution / DLAA and FSR 3.1 upscaling for
+GAMMA, with quality presets, DLSS model selection and shared CAS sharpening.
+Standard and AVX MT binaries, plus a matching MO2 shader/UI compatibility mod.
+No Frame Generation.
+
+DESCRIPTION
+This brings the OGSR-inspired DLSS/FSR integration to xray-monolith's
+all-in-one-vs2022-wpo-mt engine branch without a DX12 renderer port.
+
+The Video > Basic menu has one Off / DLSS / FSR selector. The remaining controls
+change with the selected method, including quality mode, DLSS model preset and
+sharpening. Method and quality changes apply through a renderer restart; you
+do not need to exit the game each time.
+
+Included:
+- DLSS Super Resolution and DLAA.
+- FSR 3.1.2 upscaling and Native AA using a community D3D11 backend.
+- Quality / Balanced / Performance / Ultra Performance modes.
+- DLSS Default / J / K / L / M preset requests.
+- Shared CAS sharpening slider.
+- Standard DX11 and optional AVX builds of the MT engine.
+- Matched GAMMA shader/UI overrides and corrected smoke target sizing.
+- Cached sampler bias variants to avoid rebuilding samplers at scene boundaries.
+
+This is an experimental tester release, not an official GAMMA update.
+Initial gameplay testing has looked good, but that is not an all-effects,
+all-hardware compatibility guarantee. There is no promised FPS uplift.
+
+INSTALLATION SUMMARY
+Download ONE engine package and the GAMMA compatibility mod.
+Back up your bin files, saves and settings.
+Extract the engine package into Anomaly's root so its files go into bin.
+Install the compatibility ZIP as a separate MO2 mod, BELOW SSS, Atmospherics,
+Beef's NVG and conflicting shader mods in the LEFT pane; its files must win.
+Launch the supplied standard or AVX executable through MO2. No custom
+development launch arguments or automatic-save loading are needed.
+Turn MSAA off and select the upscaler in Video > Basic.
+See INSTALL.txt for requirements, detailed steps and rollback.
+
+REQUIREMENTS
+Tested shader combination: SSS Update 23 (Update23_5), Atmospherics 2.69 RC7.5,
+and the audited GAMMA version of Beef's shader-based NVGs.
+Other versions/modlists may need a compatibility merge. This is NOT a generic
+drop-in shader patch for every Anomaly installation.
+DLSS needs supported NVIDIA RTX hardware/drivers.
+FSR requires D3D feature level 11.1; physical AMD/Intel GPU testing is pending.
+AVX requires CPU and OS AVX support; use the standard build when unsure.
+Both downloads are Release builds. AVX and multithreading are separate features.
+
+LIMITATIONS
+No Frame Generation, FSR4, Ray Reconstruction, Streamline or DX12 bridge.
+HDR10, scopes, transparencies, tracers and broader mod interactions need testing.
+Secondary scope frames currently use spatial upscaling. FSR reactive masks are
+not supplied. Some OGSR visual fixes remain unported/unvalidated.
+AVX gameplay validation remains pending; do not assume a performance advantage.
+Back up saves before testing. Disable the compatibility mod when returning to
+stock binaries.
+
+BUG REPORTS
+Please include the full log, CPU/GPU/driver, executable variant, upscaler mode,
+preset, resolution and reproduction steps. For visual issues, show a screenshot
+or video and say whether it also happens with upscaling Off.
+
+CREDITS
+GSC Game World; Anomaly and xray-monolith contributors; OGSR contributors;
+NVIDIA (DLSS/NGX); AMD and community FSR D3D11 backend contributors;
+Ascii1457 (SSS), Hippobot (Atmospherics), theRealBeef (NVGs).
+Not an official or endorsed NVIDIA/AMD/GAMMA release.

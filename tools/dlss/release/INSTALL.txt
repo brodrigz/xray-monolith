@@ -1,0 +1,109 @@
+EXPERIMENTAL DLSS / FSR 3.1 FOR GAMMA — MT DX11
+================================================
+
+This is an engine update plus a matching MO2 shader/UI compatibility mod.
+It is not standalone Anomaly, not Frame Generation, and not a generic SSS patch.
+Use a separate test profile and back up your engine binaries, settings and saves.
+
+DOWNLOADS
+- Engine-DX11: standard Release MT executable (AnomalyDX11.exe).
+- Engine-DX11-AVX: Release MT executable using AVX (AnomalyDX11AVX.exe).
+  Requires CPU AND operating-system AVX support. AVX2 is not required.
+- GAMMA-Compatibility: required shader/UI overrides, shared by both binaries.
+
+Choose either engine package and install the compatibility package as well.
+Both executables can coexist for comparison. Do not launch an old executable
+left in bin by mistake. Standard DX11 is the compatibility-first choice;
+AVX is not a promise of higher FPS.
+
+REQUIREMENTS / SUPPORTED SHADER COMBINATION
+- A working 64-bit Anomaly/GAMMA installation and its normal runtime dependencies.
+- This modified DX11 engine, based on all-in-one-vs2022-wpo-mt.
+- Screen Space Shaders Update 23 (audited local package: Update23_5).
+- Atmospherics 2.69 RC7.5 and Beef's shader-based NVGs (audited GAMMA versions).
+- DLSS: a supported NVIDIA RTX GPU/driver. nvngx_dlss.dll 310.9.1.0 is included.
+- FSR 3.1.2: D3D feature level 11.1; no NVIDIA runtime is needed to run FSR.
+  The DX11 backend is community-provided, not AMD's official DX12/Vulkan backend.
+  AMD/Intel GPU compatibility has not been validated on physical hardware.
+- MSAA off. This port does not support combining MSAA with either upscaler.
+
+INSTALLATION
+1. Close the game. Back up the matching executable and any existing
+   nvngx_dlss.dll in Anomaly's bin directory. Back up your saves/settings too.
+2. Extract the chosen engine ZIP into the Anomaly game directory, merging bin.
+   Keep all existing normal runtime DLLs. This is an update, not a complete bin
+   distribution. Do NOT install the engine ZIP as a normal MO2 gamedata mod.
+3. Install GAMMA-Compatibility.zip through MO2 and enable it in your test profile.
+   If MO2 asks for a data directory, select the level containing gamedata.
+4. In MO2's LEFT pane, put this compatibility mod below SSS, Atmospherics,
+   Beef's NVG, and any conflicting shader overrides. Our files must win.
+   Other mods changing these same shaders may require a manual merge.
+   This has nothing to do with the right-pane plugin order.
+5. Add/select the executable in MO2:
+      Standard: <Anomaly>/bin/AnomalyDX11.exe
+      AVX:      <Anomaly>/bin/AnomalyDX11AVX.exe
+   Working directory: <Anomaly>
+   Use the installation's normal filesystem/configuration. No custom -fsltx,
+   development shader path, or automatic-save-loading argument is required.
+   Do not copy development test launch arguments into the release entry.
+6. Start through MO2 with that profile. Video > Basic contains Upscaling:
+   Off / NVIDIA DLSS / AMD FSR 3, with method-specific quality/preset controls.
+   Apply restarts the renderer after method/quality/preset changes.
+   Sharpening alone does not require a renderer or game restart.
+7. After replacing an engine executable, fully restart the game once. The engine
+   selects feature level 11.1 at device creation. Later method switches only
+   need the menu's Apply / vid_restart.
+
+Do not install Streamline DLLs, a DX12 bridge, or OptiScaler for this feature.
+They are not required. Existing injector/overlay combinations are not validated.
+
+CONTROLS
+DLSS: DLAA, Quality, Balanced, Performance, Ultra Performance.
+DLSS model preset: Default, J, K, L, M (requests; driver/model overrides may apply).
+FSR3: Native AA, Quality, Balanced, Performance, Ultra Performance.
+Upscaling sharpening: shared CAS slider, 0 (off) to 1.
+Sharpening does not alter Atmospherics' independent clarity/sharpening settings.
+New configs default to native rendering. Existing configs retain their choices.
+
+KNOWN LIMITATIONS / TEST STATUS
+- Experimental, not a production-ready replacement or an official GAMMA release.
+- DLSS and FSR gameplay smoke tests passed on RTX 4070 with no obvious artifacts
+  reported; this is not exhaustive visual validation.
+- MT logs confirm DLSS gameplay evaluation in DLAA and Quality. AVX gameplay
+  validation and physical AMD/Intel hardware testing are still pending.
+- Automated backend, temporal, menu, CAS and sampler-cache tests exist. See the
+  release manifest/test report for the exact builds and tests used.
+- HDR10, scopes, transparency/particles, tracers and unusual mod combinations
+  need more testing. FSR reactive/composition masks are currently omitted.
+- Secondary scope frames use spatial upscaling rather than temporal history.
+- Smoke target dimensions/viewports are corrected, but dedicated smoke/fire
+  image-quality comparison is still pending.
+- Bloom/DOF/distortion and the 3D reticle still precede reconstruction. All OGSR
+  visual fixes have not been ported or validated here.
+- Runtime/feature initialization failure keeps native rendering. Evaluation
+  failure disables that upscaler until vid_restart and uses spatial fallback.
+- CPU-bound scenes may gain little from lower internal resolution. Neither AVX,
+  MT nor the sampler-cache optimization guarantees a particular FPS improvement.
+- Some RTSS versions lose the overlay when DLSS is enabled. A per-executable
+  DX10-hook override fixed this locally; no global RTSS changes are installed.
+
+REPORTING
+Send the full engine log, GPU/driver/CPU, standard or AVX executable, upscaler
+mode/preset, output resolution, mod versions and clear reproduction steps.
+For visual issues include screenshots/video and whether Off reproduces it.
+Compare with optional injectors/overlays disabled before reporting conflicts.
+Avoid sharing personal saves unless needed and intentionally selected.
+
+ROLLBACK
+Close the game, disable the compatibility mod and restore the backed-up engine
+and nvngx_dlss.dll. Re-select the original MO2 executable. Restore your settings
+if necessary. Never keep these shader overrides enabled with stock binaries.
+The packages contain no saves, personal configuration, launch scripts or caches.
+
+CREDITS / NOTICES
+Engine: GSC Game World, Anomaly contributors, themrdemonized/xray-monolith.
+Reference integration: OGSR contributors. DLSS/NGX: NVIDIA.
+FSR3/CAS: AMD and the community D3D11 backend contributors.
+Shader compatibility: Ascii1457 (SSS), Hippobot (Atmospherics), theRealBeef (NVGs).
+Original copyright notices remain in the files. See licenses and CREDITS.txt.
+This project is not endorsed by NVIDIA, AMD, GSC or the GAMMA team.

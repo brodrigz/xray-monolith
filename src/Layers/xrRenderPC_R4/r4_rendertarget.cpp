@@ -91,7 +91,16 @@ public:
     void Compile(CBlender_Compile& C) override
     {
         IBlender::Compile(C);
-        if (C.iElement > 2) return;
+        if (C.iElement > 3) return;
+        if (C.iElement == 3)
+        {
+            // r_upscaler_debug 2: motion vectors
+            C.r_Pass("stub_screen_space", "dlss_debug_mv", FALSE, FALSE, FALSE);
+            C.r_dx10Texture("s_image", r2_RT_ssfx_motion_vectors);
+            C.r_dx10Sampler("smp_nofilter");
+            C.r_End();
+            return;
+        }
         C.r_Pass("stub_screen_space", C.iElement == 2 ? "dlss_sharpen" : "dlss_copy", FALSE, FALSE, FALSE);
         C.r_dx10Texture("s_image", C.iElement == 1 ? r2_RT_albedo : "$user$dlss_output");
         C.r_dx10Sampler("smp_rtlinear");

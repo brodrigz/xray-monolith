@@ -1,6 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="..\xrRenderDX10\D3D12PresentBridge.h">
+      <Filter>Kernel</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <Filter Include="Kernel">
       <UniqueIdentifier>{7c3adbe0-c7f0-4969-bc3e-c99c57a78afc}</UniqueIdentifier>
     </Filter>
@@ -1100,6 +1105,9 @@
     </ClCompile>
     <ClCompile Include="..\xrRender\ColorMapManager.cpp">
       <Filter>Core_Target\ColorMap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\xrRenderDX10\D3D12PresentBridge.cpp">
+      <Filter>Kernel</Filter>
     </ClCompile>
     <ClCompile Include="..\xrRenderDX10\dx10HW.cpp">
       <Filter>Refactored\HW</Filter>

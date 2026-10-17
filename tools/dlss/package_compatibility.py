@@ -13,7 +13,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "extras/dlss_fomod"
 LEGACY = REPO / "extras/dlss_gamma/gamedata"
-VERSION = "0.5"
+VERSION = "0.6"
 ARCHIVE_NAME = f"dlss-binaries-GAMMA-compatibility-patch-{VERSION}.zip"
 ATMOS_FILES = ("deffer_impl_flat.ps", "ssfx_ao.ps", "ssfx_il.ps", "ssfx_sss_ext.ps")
 

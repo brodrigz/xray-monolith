@@ -1,0 +1,55 @@
+EXPERIMENTAL RELEASE TEST REPORT — 2026-10-08
+============================================
+Engine source: feat/dlss-sr-mt
+Commit: 777c5220d33766b7b4680e081bef55ea12eba646
+Upstream MT base: 7b79d2be
+Packaging documents/tools were prepared after this engine commit.
+
+BUILD RESULTS
+Standard: solution DX11|x64 (ReleaseR4/Release) — passed.
+AVX: solution DX11-AVX|x64 (ReleaseR4-AVX/Release-AVX) — passed.
+MSVC v143; AVX compiler option, not AVX2. No engine code change was needed
+to enable the existing AVX solution configuration.
+Compiler warnings remain in upstream code; builds are not warning-free.
+
+AnomalyDX11.exe SHA-256:
+0A3513B6D67EA60606951739C0325F7FC448403E348D8EC68310CC3DDDE95096
+AnomalyDX11AVX.exe SHA-256:
+97AE984AE05D0FBBEE3AA7BDE7528C4F6A10512369138DF658AC56B7579CCF26
+NVIDIA nvngx_dlss.dll 310.9.1.0 SHA-256:
+3975567B8943C53ACCE397F2B72380092F84F162D00B0D2C7D08A1025C563983
+
+AVX AUTOMATED REGRESSIONS
+CPU/OS AVX support checked before executing tests.
+Separate test executables compiled with the MSVC /arch:AVX option.
+- DLSS: RTX 4070, 500 evaluations / 25 feature lifetimes, readbacks,
+  invalid-input fallback and viewport restoration; zero D3D11 errors.
+- FSR3: RTX 4070 and WARP, 200 evaluations / 10 lifetimes each, all five
+  quality modes in SDR/HDR, readbacks, state restoration and safe failure.
+- FSR feature level 11.0: clean rejection before shader creation.
+- CAS: 28 WARP draws, zero bypass, flat/HDR colors, alpha, borders and strength.
+- Sampler cache: 6000 warmed switches with no cache creation calls, all six
+  stages, stable handles, late samplers, anisotropy invalidation, bounded
+  eviction, three resets/destruction; no live samplers or D3D11 errors.
+- Temporal contract tests passed.
+- Shared dynamic menu Lua tests passed.
+Invalid-input log messages in backend tests are deliberate test cases.
+
+STANDARD / GAMEPLAY EVIDENCE
+The corresponding standard backend and regression suites passed previously.
+The isolated MT game log confirms successful DLSS gameplay evaluation in DLAA
+and Quality, including renderer restarts. Earlier non-MT gameplay smoke tests
+covered DLSS and FSR3 Balanced/Quality/Native AA on RTX 4070.
+
+NOT YET VALIDATED
+AVX gameplay, packaged mod installation using normal game filesystem paths,
+physical AMD/Intel GPUs, HDR10 gameplay and comprehensive scopes/transparency/
+smoke/fire/tracer/mod-combination checks.
+No FPS benchmark or claimed AVX/sampler-cache speedup is established.
+Passing backend tests does not validate the complete game rendering pipeline.
+
+PACKAGE CHECKS
+The packaging script hashes each payload file, verifies every archived payload
+against its manifest, and writes SHA256SUMS.txt for the archives.
+Personal saves/settings/logs/caches and machine-specific filesystem/launcher
+files are excluded. Standard engine dependencies remain prerequisites.

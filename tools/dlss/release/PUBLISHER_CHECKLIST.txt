@@ -1,0 +1,23 @@
+PRIVATE RELEASE CHECKLIST — DO NOT INCLUDE THIS FILE IN THE PUBLIC MOD ZIP
+========================================================================
+The archives are prepared locally; nothing has been uploaded or published.
+
+Before publishing:
+- Read the included SDK/runtime licenses and confirm distribution obligations.
+  Exact runtime license:
+  https://github.com/NVIDIA/DLSS/blob/v310.9.1/LICENSE.txt
+- Confirm permission/terms for redistributing the merged SSS, Atmospherics and
+  Beef NVG shader files. Attribution is not a substitute for permission.
+  This packaging task has not established those authors' redistribution terms.
+- Review the publishing draft, author credit, support contact and hosting links.
+  No source/release URL for this private/local branch has been invented.
+- Complete at least a gameplay smoke test of the AVX binary and the packaged
+  MO2 mod using NORMAL filesystem paths (not the development shader override).
+  The current gameplay evidence came from isolated development installations.
+- Retain both executable PDBs locally for crash diagnosis; do not ship personal
+  logs, saved games, MO2 metadata, caches or machine-specific filesystem files.
+- Consider checking smoke/fire, scope transitions, method switches, loading,
+  NV/thermal/gasmasks and fullscreen/vid_restart before widening the tester pool.
+- Publish the SHA256SUMS file alongside the three download archives.
+- Keep the experimental limitations. Do not advertise measured FPS gains or
+  universal GAMMA/AMD/Intel compatibility without corresponding tests.

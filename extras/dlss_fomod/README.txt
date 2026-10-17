@@ -1,9 +1,9 @@
-DLSS / FSR3 COMPATIBILITY PATCH - 0.5
+DLSS / FSR3 COMPATIBILITY PATCH - 0.6
 https://github.com/brodrigz/xray-monolith
 
 INSTALL
 -------
-1. Install the 0.5 DLSS / FSR3 binaries using that release's instructions.
+1. Install the 0.6 DLSS / FSR3 binaries using that release's instructions.
 2. Install and enable SSS 23.5 with GAMMA's recommended options.
 3. Install this ZIP through MO2:
    - Page 1: leave the required SSS 23.5 option checked.
@@ -11,8 +11,9 @@ INSTALL
    - Page 3: select only the add-ons you have installed.
 4. Enable this patch BELOW SSS, Atmospherics and any other shader mods
    in MO2's left pane.
-5. Launch the DX11 game through MO2. In Settings > Video > Basic:
-   set MSAA to Off, choose DLSS or FSR 3, then click Apply.
+5. Launch the DX11 game (or the experimental DX12 one) through MO2. In
+   Settings > Video > Basic: set MSAA to Off, choose DLSS or FSR, then click
+   Apply. Frame generation is in the same menu on the DX12 executable.
 
 The original mods and binaries must be installed separately.
 DLSS requires an NVIDIA RTX GPU. No special launch arguments are needed.

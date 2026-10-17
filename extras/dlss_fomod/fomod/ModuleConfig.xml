@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-  <moduleName>DLSS / FSR3 Compatibility Patch - 0.5</moduleName>
+  <moduleName>DLSS / FSR3 Compatibility Patch - 0.6</moduleName>
   <requiredInstallFiles>
     <folder source="docs" destination="DLSS Compatibility - Instructions" priority="0" />
   </requiredInstallFiles>
@@ -11,7 +11,7 @@
           <plugins order="Explicit">
             <plugin name="SSS 23.5 compatibility - REQUIRED">
               <description>BEFORE INSTALLING
-- Install the 0.5 DLSS/FSR3 modded binaries into your Anomaly folder.
+- Install the 0.6 DLSS/FSR3 modded binaries into your Anomaly folder.
 - Install Screen Space Shaders 23.5 (already comes with gamma 0.9.5)
 
 AFTER INSTALLING

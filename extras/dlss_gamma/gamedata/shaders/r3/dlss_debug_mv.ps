@@ -1,0 +1,11 @@
+#include "common.h"
+#include "dlss_contract.h"
+
+// r_upscaler_debug 2. Red/green: horizontal/vertical motion in render pixels per
+// frame (sqrt scale, full at 16 px). Blue: HUD mask. Black: no motion.
+float4 main(p_screen I) : SV_Target
+{
+    float4 mv = s_image.SampleLevel(smp_nofilter, I.tc0, 0);
+    float2 px = abs(mv.xy) * dlss_params.yz;
+    return float4(sqrt(saturate(px / 16.0f)), mv.z * 0.35f, 1.0f);
+}

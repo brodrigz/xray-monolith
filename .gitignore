@@ -7,6 +7,9 @@
 _build/
 # Downloaded upscaler runtimes and machine-specific shader dependency files
 nvngx_dlss*.dll
+/sdk/Streamline/bin/
+/sdk/FidelityFX2/bin/
+/sdk/AgilitySDK/bin/
 /sdk/FSR3/shaders/*.d
 /src/*.tss
 /**/x64/

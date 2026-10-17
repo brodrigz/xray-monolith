@@ -1,0 +1,57 @@
+DLSS / FSR experimental 0.6
+===========================
+
+CHANGES FROM 0.5
+- New experimental AnomalyDX12.exe. The game still renders in DX11 and
+  presents through DX12, which enables frame generation:
+  - DLSS Frame Generation 2x (RTX 40/50) with Reflex, via Streamline 2.14.16.
+    The bundled DLSS-G runtime (310.9.16) supports Preset C; force it with the
+    NVIDIA app or NVIDIA Profile Inspector if you want it (driver setting,
+    not changed by this mod).
+  - AMD FSR Frame Generation 2x (any DX12 GPU).
+  - AMD FSR upscaling through DX12 (FSR 4 on supported Radeon GPUs,
+    FSR 3.1 elsewhere).
+- Lens flares are drawn after upscaling. Fixes the sun glow over the hands
+  and weapon turning into a block/grid pattern with DLSS.
+- The video menu only lists the upscalers and frame generation your GPU
+  supports. On AnomalyDX12.exe the renderer shows as "DirectX 12 (Bridge)".
+- Fixes a crash when switching frame generation modes in the same session.
+- Atmospherics RC7.x: under an upscaler, AO noise is offset per 64-pixel
+  tile so the upscaler never sees the same tile repeat.
+- New console diagnostic r_upscaler_debug (1 = upscaler input,
+  2 = motion vectors; not saved).
+
+INSTALL
+1. Close the game and back up the files you are replacing.
+2. Extract the binaries ZIP into the Anomaly folder, merging bin and db.
+   New in 0.6: bin\D3D12, bin\streamline and three amd_fidelityfx DLLs.
+3. Install the compatibility ZIP through MO2. Choose REPLACE when updating.
+4. Choose your installed Atmospherics and add-ons in the installer.
+5. Enable the patch below your shader mods in MO2's left pane.
+6. Clear the shader cache through the launcher.
+7. Launch through MO2: AnomalyDX11 / AnomalyDX11AVX as before, or add
+   bin\AnomalyDX12.exe as an MO2 executable for frame generation.
+   Set MSAA/AA to Off, choose DLSS or FSR, and click Apply.
+
+FRAME GENERATION (DX12 executable only)
+- Needs an active upscaler (DLSS or FSR) and MSAA off.
+- DLSS-G only generates frames while the game window has focus.
+- After using FSR frame generation, DLSS frame generation needs a game
+  restart (the menu says so).
+- With frame generation on, r__framelimit counts displayed frames.
+
+CREDITS
+OGSR team and xrSimpAI - original DLSS implementation and the DX12
+presentation bridge this build adapts.
+https://github.com/OGSR/OGSR-Engine
+Full credits and licenses are included in the binaries package.
+
+TEST STATUS
+Built: DX11, DX11-AVX and DX12 Release.
+Tested in game (RTX 4070, Windows 10): DX12 presentation, DLSS upscaling,
+DLSS frame generation, the lens flare fix.
+Tested outside the game (standalone GPU tests): FSR frame generation and the
+DX12 FSR upscaler, runtime switching and resize.
+Not yet verified in game: FSR frame generation and DX12 FSR image quality,
+3D scopes with frame generation, FSR 4 on Radeon hardware, HDR10 with FSR
+frame generation.

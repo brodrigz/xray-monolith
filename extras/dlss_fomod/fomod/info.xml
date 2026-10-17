@@ -2,7 +2,7 @@
 <fomod>
   <Name>DLSS / FSR3 Compatibility Patch</Name>
   <Author>bepis</Author>
-  <Version>0.5</Version>
-  <Description>Requires SSS 23.5 and the 0.5 DLSS / FSR3 modded binaries.</Description>
+  <Version>0.6</Version>
+  <Description>Requires SSS 23.5 and the 0.6 DLSS / FSR3 modded binaries.</Description>
   <Website>https://github.com/brodrigz/xray-monolith</Website>
 </fomod>
