@@ -64,8 +64,50 @@ HRESULT D3D12PresentBridge::Check(HRESULT result, const char* stage)
             m_logger(message);
         }
         if (m_failureStage == nullptr) m_failureStage = stage;
+        if (result == HRESULT_FROM_WIN32(WAIT_TIMEOUT) || result == DXGI_ERROR_DEVICE_REMOVED ||
+            result == DXGI_ERROR_DEVICE_RESET || result == DXGI_ERROR_DEVICE_HUNG ||
+            result == DXGI_ERROR_DRIVER_INTERNAL_ERROR)
+            ReportStall(stage, result);
     }
     return result;
+}
+
+void D3D12PresentBridge::ReportStall(const char* stage, HRESULT result)
+{
+    if (m_stallReported || !m_logger) return;
+    m_stallReported = true;
+    auto completed = [](ID3D12Fence* fence) { return fence ? static_cast<unsigned long long>(fence->GetCompletedValue()) : 0ull; };
+    char message[512]{};
+    snprintf(message, sizeof(message),
+        "[DX12 bridge] Stall report at %s (0x%08lX): runtime=%s generating=%u serial=%llu "
+        "ready(DX11->DX12) %llu/%llu finished %llu retired %llu/%llu; removed reason DX12=0x%08lX DX11=0x%08lX",
+        stage, static_cast<unsigned long>(result), RuntimeName(), unsigned(m_lastGenerated),
+        static_cast<unsigned long long>(m_serial), completed(m_ready12.Get()), static_cast<unsigned long long>(m_lastReady),
+        completed(m_finished12.Get()), completed(m_retired12.Get()), static_cast<unsigned long long>(m_lastRetired),
+        static_cast<unsigned long>(m_device12 ? m_device12->GetDeviceRemovedReason() : S_OK),
+        static_cast<unsigned long>(m_device11 ? m_device11->GetDeviceRemovedReason() : S_OK));
+    m_logger(message);
+    // Process-wide use of this GPU's dedicated memory (DX11 rendering and DX12
+    // presentation together) against the budget Windows grants the game.
+    DXGI_QUERY_VIDEO_MEMORY_INFO local{}, shared{};
+    if (m_adapter && SUCCEEDED(m_adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &local)) &&
+        SUCCEEDED(m_adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &shared)))
+    {
+        constexpr double MiB = 1024.0 * 1024.0;
+        snprintf(message, sizeof(message),
+            "[DX12 bridge] Stall report VRAM: %.0f/%.0f MiB used/budget (dedicated); %.0f/%.0f MiB in system memory",
+            local.CurrentUsage / MiB, local.Budget / MiB, shared.CurrentUsage / MiB, shared.Budget / MiB);
+        m_logger(message);
+    }
+    for (size_t i = 0; i < m_slots.size(); ++i)
+    {
+        const auto& slot = m_slots[i];
+        snprintf(message, sizeof(message), "[DX12 bridge] Stall report slot %zu%s: finished %llu retired %llu DLSS-G inputs %llu/%llu",
+            i, i == m_currentSlot ? " (current)" : "", static_cast<unsigned long long>(slot.finished),
+            static_cast<unsigned long long>(slot.retired), completed(slot.inputFence.Get()),
+            static_cast<unsigned long long>(slot.inputValue));
+        m_logger(message);
+    }
 }
 
 #define BRIDGE_CHECK(expression) do { const HRESULT bridgeResult = Check((expression), #expression); if (FAILED(bridgeResult)) return bridgeResult; } while (false)
@@ -105,6 +147,7 @@ HRESULT D3D12PresentBridge::Initialize(IDXGIFactory2* factory, IDXGIAdapter* ada
         return Check(E_INVALIDARG, "Initialize arguments");
     if (context11->GetType() != D3D11_DEVICE_CONTEXT_IMMEDIATE)
         return Check(E_INVALIDARG, "Immediate D3D11 context required");
+    adapter->QueryInterface(IID_PPV_ARGS(&m_adapter)); // optional: VRAM figures in ReportStall
 
     // Verify identity, rather than silently attempting cross-adapter sharing.
     ComPtr<IDXGIDevice> dxgiDevice;
@@ -464,6 +507,15 @@ HRESULT D3D12PresentBridge::AcquireFrame()
     if (m_slots.empty()) return Check(E_UNEXPECTED, "Bridge not initialized");
     m_currentSlot = m_nextSlot;
     auto& slot = m_slots[m_currentSlot];
+    // DX11 is about to rewrite this slot's FG inputs. DLSS-G finished reading
+    // them frames ago in practice, so this rarely waits; when it does, it waits
+    // on the CPU, which cannot block DLSS-G's own queue (see AfterPresent).
+    if (slot.inputFence)
+    {
+        BRIDGE_CHECK(WaitFor(slot.inputFence.Get(), slot.inputValue));
+        slot.inputFence.Reset();
+        slot.inputValue = 0;
+    }
     auto* fence12 = slot.retired ? m_retired12.Get() : m_finished12.Get();
     auto* fence11 = slot.retired ? m_retired11.Get() : m_finished11.Get();
     const UINT64 value = slot.retired ? slot.retired : slot.finished;
@@ -541,6 +593,7 @@ HRESULT D3D12PresentBridge::SubmitFrame()
 
     const UINT64 serial = ++m_serial;
     BRIDGE_CHECK(m_context11->Signal(m_ready11.Get(), serial));
+    m_lastReady = serial;
     m_context11->Flush(); // Submit the signal before D3D12 waits for it.
     BRIDGE_CHECK(m_queue->Wait(m_ready12.Get(), serial));
 
@@ -608,6 +661,14 @@ bool D3D12PresentBridge::NeedsFGInputs() const
 HRESULT D3D12PresentBridge::CreateInputs(UINT width, UINT height, DXGI_FORMAT motionFormat)
 {
     BRIDGE_CHECK(WaitIdle());
+    // DLSS-G may still read the old inputs after our queue drains; release them
+    // only once its input fences have completed.
+    for (auto& slot : m_slots)
+    {
+        if (slot.inputFence) BRIDGE_CHECK(WaitFor(slot.inputFence.Get(), slot.inputValue));
+        slot.inputFence.Reset();
+        slot.inputValue = 0;
+    }
     if (m_runtimeKind == PresentRuntime::Streamline && !m_streamline.ClearTags()) return Check(E_FAIL, "Clear resized FG inputs");
     m_depthSRV.Reset();
     m_depthSource.Reset();
@@ -916,7 +977,10 @@ HRESULT D3D12PresentBridge::AfterPresent()
             // Keep valid explicit fence data too, when the failed query supplied it.
             BRIDGE_CHECK(m_device12->GetDeviceRemovedReason());
             BRIDGE_CHECK(m_device11->GetDeviceRemovedReason());
-            if (inputFence && inputValue) BRIDGE_CHECK(m_queue->Wait(inputFence.Get(), inputValue));
+            // CPU waits only: a GPU wait on DLSS-G's fence could block the queue it needs.
+            if (inputFence && inputValue) BRIDGE_CHECK(WaitFor(inputFence.Get(), inputValue));
+            for (auto& pending : m_slots)
+                if (pending.inputFence) BRIDGE_CHECK(WaitFor(pending.inputFence.Get(), pending.inputValue));
             BRIDGE_CHECK(WaitIdle());
             BRIDGE_CHECK(m_device12->GetDeviceRemovedReason());
             if (!m_streamline.DisableAfterFailure()) return Check(E_FAIL, "Disable failed FG runtime");
@@ -925,6 +989,8 @@ HRESULT D3D12PresentBridge::AfterPresent()
             // keep final-color targets, swapchain and Reflex for normal presentation.
             for (auto& retiredSlot : m_slots)
             {
+                retiredSlot.inputFence.Reset();
+                retiredSlot.inputValue = 0;
                 retiredSlot.depthUAV.Reset();
                 retiredSlot.motionUAV.Reset();
                 for (auto& input : retiredSlot.inputs11) input.Reset();
@@ -945,13 +1011,20 @@ HRESULT D3D12PresentBridge::AfterPresent()
             m_totalPresented += presented;
             if (presented > 1) ++m_generatedPresents;
             const UINT64 serial = ++m_serial;
-            // DX11 writes on a non-presenting queue, so its slot-reuse fence must
-            // include FG consumption, not only our color-copy completion. Keep
-            // the previously validated presentation-queue ordering until any
-            // more aggressive queue parallelism passes visible FG validation.
-            if (inputFence && inputValue) BRIDGE_CHECK(m_queue->Wait(inputFence.Get(), inputValue));
+            // DX11 writes on a non-presenting queue, so slot reuse must also follow
+            // FG consumption, not only our color copy. The presenting queue is
+            // ordered behind FG work (eBlockPresentingClientQueue), so a signal
+            // here covers that. DLSS-G's input fence is checked on the CPU at reuse
+            // (AcquireFrame) and is never waited on by this queue: if that value
+            // depends on a later present (e.g. RTX 50 frame pacing), a queue wait
+            // here would block the very present that completes it.
             BRIDGE_CHECK(m_queue->Signal(m_retired12.Get(), serial));
-            slot.retired = serial;
+            slot.retired = m_lastRetired = serial;
+            if (inputFence && inputValue)
+            {
+                slot.inputFence = inputFence;
+                slot.inputValue = inputValue;
+            }
         }
         // Untagged Off/probe frames need only the color-copy fence; no redundant
         // retirement signals or waits for a previous frame's FG inputs.
@@ -965,7 +1038,7 @@ HRESULT D3D12PresentBridge::AfterPresent()
             ++m_enabledPresents;
             const UINT64 serial = ++m_serial;
             BRIDGE_CHECK(m_queue->Signal(m_retired12.Get(), serial));
-            slot.retired = serial;
+            slot.retired = m_lastRetired = serial;
         }
         // Frame IDs must advance by exactly one per presented frame.
         ++m_fsrFrameId;
@@ -1364,6 +1437,7 @@ void D3D12PresentBridge::Shutdown()
     m_sceneValid = m_hudlessValid = m_allowGeneration = false;
     m_resetHistory = true;
     m_swapChain.Reset();
+    m_adapter.Reset();
     m_ready11.Reset();
     m_finished11.Reset();
     m_retired11.Reset();

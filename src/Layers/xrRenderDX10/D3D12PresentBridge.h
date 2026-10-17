@@ -129,6 +129,11 @@ private:
         ComPtr<ID3D12GraphicsCommandList> commands;
         UINT64 finished{};
         UINT64 retired{};
+        // DLSS-G's "inputs processed" fence for this slot's last generated frame.
+        // Checked on the CPU before DX11 rewrites the inputs; never waited on by
+        // the presenting queue (see AfterPresent).
+        ComPtr<ID3D12Fence> inputFence;
+        UINT64 inputValue{};
         bool timestampPending{};
         ComPtr<ID3D12Resource> inputs12[3]; // depth, motion, HUD-less color
         ComPtr<ID3D11Texture2D> inputs11[3];
@@ -141,6 +146,8 @@ private:
         ComPtr<ID3D12Resource>& texture12, ComPtr<ID3D11Texture2D>& texture11);
     HRESULT WaitFor(ID3D12Fence* fence, UINT64 value, bool allocatorReuse = false);
     HRESULT Check(HRESULT result, const char* stage);
+    // Once per bridge: fence progress and device-removed reasons after a timeout or device loss.
+    void ReportStall(const char* stage, HRESULT result);
     HRESULT CreateInputs(UINT width, UINT height, DXGI_FORMAT motionFormat);
     // Converts engine depth (D24S8/R32) and SSS motion (RGBA16F) to R32F/RG16F UAVs in a
     // private context state; optionally copies one more resource there (unbound source).
@@ -176,6 +183,7 @@ private:
     ComPtr<ID3D12Device> m_device12;
     ComPtr<ID3D12CommandQueue> m_queue;
     ComPtr<IDXGISwapChain3> m_swapChain;
+    ComPtr<IDXGIAdapter3> m_adapter;
     // Separate monotonic timelines: DX11 ready, presentation copy done, FG inputs retired.
     ComPtr<ID3D12Fence> m_ready12, m_finished12;
     ComPtr<ID3D11Fence> m_ready11, m_finished11;
@@ -184,6 +192,8 @@ private:
     std::vector<Slot> m_slots;
     DXGI_SWAP_CHAIN_DESC1 m_desc{};
     UINT64 m_serial{};
+    UINT64 m_lastReady{}, m_lastRetired{}; // last values signalled, for ReportStall
+    bool m_stallReported{};
     UINT m_currentSlot{}, m_nextSlot{};
     bool m_acquired{}, m_submitted{}, m_submittedFG{}, m_lastGenerated{}, m_vsyncBlocked{};
     UINT m_inputWidth{}, m_inputHeight{};
