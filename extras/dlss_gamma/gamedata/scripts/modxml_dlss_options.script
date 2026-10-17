@@ -229,7 +229,8 @@ end
 -- renderer and presents through DX12. Only the label changes; the console
 -- value stays renderer_r4 so saved configs and scripts keep working.
 local function label_dx12_renderer()
-    if not get_console():get_token_list("r_frame_generation") then return end
+    -- get_token_list returns an empty table, not nil, for an unknown command.
+    if #get_console():get_token_list("r_frame_generation") == 0 then return end
     for _, top in ipairs(ui_options.options) do
         if top.id == "video" and top.gr then
             for _, group in ipairs(top.gr) do
