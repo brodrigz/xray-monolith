@@ -177,6 +177,10 @@ void CRenderTarget::phase_ssfx_ao()
 
 	float ScaleFactor = std::min(std::max(ps_ssfx_ao.x, 1.0f), 8.0f);
 
+	// Shaders divide by .x, so they must see the same clamped factor the viewport uses
+	Fvector4 ao_setup = ps_ssfx_ao;
+	ao_setup.x = ScaleFactor;
+
 	Fvector2 p0, p1;
 	p0.set(0.0f, 0.0f);
 	p1.set(1.0f / ScaleFactor, 1.0f / ScaleFactor);
@@ -202,7 +206,7 @@ void CRenderTarget::phase_ssfx_ao()
 
 	//Set pass
 	RCache.set_Element(s_ssfx_ao->E[0]);
-	RCache.set_c("ao_setup", ps_ssfx_ao);
+	RCache.set_c("ao_setup", ao_setup);
 
 	RCache.set_c("m_current", Matrix_current);
 	RCache.set_c("m_previous", Matrix_previous);
@@ -234,8 +238,8 @@ void CRenderTarget::phase_ssfx_ao()
 
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[1]);
-	RCache.set_c("blur_setup", ps_ssfx_ao.x, 0.25f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_ao);
+	RCache.set_c("blur_setup", ScaleFactor, 0.25f, scale_X, scale_Y);
+	RCache.set_c("ao_setup", ao_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -256,7 +260,7 @@ void CRenderTarget::phase_ssfx_ao()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[2]);
 	RCache.set_c("blur_setup", 1, 0.5f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_ao);
+	RCache.set_c("ao_setup", ao_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -277,7 +281,7 @@ void CRenderTarget::phase_ssfx_ao()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[1]);
 	RCache.set_c("blur_setup", 1, 0.75f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_ao);
+	RCache.set_c("ao_setup", ao_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -297,7 +301,7 @@ void CRenderTarget::phase_ssfx_ao()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[2]);
 	RCache.set_c("blur_setup", 1, 1.0f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_ao);
+	RCache.set_c("ao_setup", ao_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -318,6 +322,10 @@ void CRenderTarget::phase_ssfx_il()
 	float h = float(RenderScreenHeight());
 
 	float ScaleFactor = std::min(std::max(ps_ssfx_il.x, 1.0f), 8.0f);
+
+	// Shaders divide by .x, so they must see the same clamped factor the viewport uses
+	Fvector4 il_setup = ps_ssfx_il;
+	il_setup.x = ScaleFactor;
 
 	Fvector2 p0, p1;
 	p0.set(0.0f, 0.0f);
@@ -344,7 +352,7 @@ void CRenderTarget::phase_ssfx_il()
 
 	//Set pass
 	RCache.set_Element(s_ssfx_ao->E[3]);
-	RCache.set_c("ao_setup", ps_ssfx_il);
+	RCache.set_c("ao_setup", il_setup);
 	RCache.set_c("m_current", Matrix_current);
 	RCache.set_c("m_previous", Matrix_previous);
 	RCache.set_Geometry(g_combine);
@@ -376,7 +384,7 @@ void CRenderTarget::phase_ssfx_il()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[4]);
 	RCache.set_c("blur_setup", 1, 0.25f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_il);
+	RCache.set_c("ao_setup", il_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -397,7 +405,7 @@ void CRenderTarget::phase_ssfx_il()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[5]);
 	RCache.set_c("blur_setup", 1, 0.5f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_il);
+	RCache.set_c("ao_setup", il_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -418,7 +426,7 @@ void CRenderTarget::phase_ssfx_il()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[4]);
 	RCache.set_c("blur_setup", 1, 0.75f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_il);
+	RCache.set_c("ao_setup", il_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
@@ -438,7 +446,7 @@ void CRenderTarget::phase_ssfx_il()
 	// Draw COLOR
 	RCache.set_Element(s_ssfx_ao->E[5]);
 	RCache.set_c("blur_setup", 1, 1.0f, scale_X, scale_Y);
-	RCache.set_c("ao_setup", ps_ssfx_il);
+	RCache.set_c("ao_setup", il_setup);
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 
