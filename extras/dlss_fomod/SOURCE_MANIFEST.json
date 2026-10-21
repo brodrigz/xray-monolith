@@ -7,24 +7,6 @@
       "archive_member": "05 - Rain - Puddles/gamedata/shaders/r3/deffer_impl_flat.ps",
       "original_sha256": "1b6b831774324d9730d4211706ef113f5a710d0ce8f92b21ce9cbfbac49f702b",
       "patched_sha256": "614ca2a0f3faeab7909b52c32c886c7fe372242e9da9c985d5b0670bd724cabb"
-    },
-    {
-      "file": "ssfx_ao.ps",
-      "archive_member": "01 - AO/gamedata/shaders/r3/ssfx_ao.ps",
-      "original_sha256": "d8fd8fbc141a2d6655c580332c0e6752837aaebc5d0aa48f5d91f16c285d83fa",
-      "patched_sha256": "5555065d8c293148e0d40acd1eef11e8e5930ad551c722cc002d3e3715700090"
-    },
-    {
-      "file": "ssfx_il.ps",
-      "archive_member": "07 - Indirect Light/gamedata/shaders/r3/ssfx_il.ps",
-      "original_sha256": "a1a05f88c418b38bdd0e1a4191795d2e5da124129c697cd2216daa70f3ce63c1",
-      "patched_sha256": "280ec704d67956c6040c6a3087c5fb121fd3a4eba4ae9b66ec57d242c0e1749f"
-    },
-    {
-      "file": "ssfx_sss_ext.ps",
-      "archive_member": "02 - SSS/gamedata/shaders/r3/ssfx_sss_ext.ps",
-      "original_sha256": "71b7b9fbe74a85e6dfb96dd17ffb107281ee560c3f694e0bb75a828557e783e7",
-      "patched_sha256": "41fcf7e7b4994d2a2c4a9e75915d5ac4bdea9b12d08a06982b5e172fe042a1f9"
     }
   ],
   "atmos_sources": [
@@ -35,46 +17,19 @@
       "original_sha256_lf": "042ee6b4a495c8d49205bf1b7d28f7afb13fbcec998af12240bcbed6bb727344"
     },
     {
-      "version": "2.69 RC7.5",
-      "file": "ssfx_ao.ps",
-      "original_sha256": "2d5b156b92f9790005fa6550bf13e38f87c05a717aaad9eb30f389068aaaf61c",
-      "original_sha256_lf": "a94f353c7fe8b783ebeaf78a6a3cf1cc8230fdec93b25e4eb808f1b2596b775e"
-    },
-    {
-      "version": "2.69 RC7.5",
-      "file": "ssfx_il.ps",
-      "original_sha256": "79ca36a50374d0c7a28845dfb74747ddee72133f49696adc4cb40aea1bf3a24b",
-      "original_sha256_lf": "79ca36a50374d0c7a28845dfb74747ddee72133f49696adc4cb40aea1bf3a24b"
-    },
-    {
-      "version": "2.69 RC7.5",
-      "file": "ssfx_sss_ext.ps",
-      "original_sha256": "3c8fcdb66a7f49c3dc8a710fa286cea2b6042861e887dab5f7fea5c407c216ec",
-      "original_sha256_lf": "3c8fcdb66a7f49c3dc8a710fa286cea2b6042861e887dab5f7fea5c407c216ec"
-    },
-    {
       "version": "2.69 RC7.6",
       "file": "deffer_impl_flat.ps",
       "original_sha256": "273f6312624ad4bf6d56c994cc26f9ec15c700f2c8b13c165c6dddc31eac9cb1",
       "original_sha256_lf": "042ee6b4a495c8d49205bf1b7d28f7afb13fbcec998af12240bcbed6bb727344"
     },
     {
-      "version": "2.69 RC7.6",
-      "file": "ssfx_ao.ps",
-      "original_sha256": "2d5b156b92f9790005fa6550bf13e38f87c05a717aaad9eb30f389068aaaf61c",
-      "original_sha256_lf": "a94f353c7fe8b783ebeaf78a6a3cf1cc8230fdec93b25e4eb808f1b2596b775e"
-    },
-    {
-      "version": "2.69 RC7.6",
-      "file": "ssfx_il.ps",
-      "original_sha256": "79ca36a50374d0c7a28845dfb74747ddee72133f49696adc4cb40aea1bf3a24b",
-      "original_sha256_lf": "79ca36a50374d0c7a28845dfb74747ddee72133f49696adc4cb40aea1bf3a24b"
-    },
-    {
-      "version": "2.69 RC7.6",
-      "file": "ssfx_sss_ext.ps",
-      "original_sha256": "3c8fcdb66a7f49c3dc8a710fa286cea2b6042861e887dab5f7fea5c407c216ec",
-      "original_sha256_lf": "3c8fcdb66a7f49c3dc8a710fa286cea2b6042861e887dab5f7fea5c407c216ec"
+      "version": "2.69 RC7.71",
+      "file": "deffer_impl_flat.ps",
+      "archive_member": "In common/gamedata/shaders/r3/deffer_impl_flat.ps",
+      "original_sha256": "273f6312624ad4bf6d56c994cc26f9ec15c700f2c8b13c165c6dddc31eac9cb1",
+      "original_sha256_lf": "042ee6b4a495c8d49205bf1b7d28f7afb13fbcec998af12240bcbed6bb727344",
+      "component": "atmos_rc7",
+      "patched_from": "extras/dlss_gamma/gamedata/shaders/r3/deffer_impl_flat.ps"
     }
   ],
   "stock_atmospherics": {
@@ -118,6 +73,27 @@
     "atmos_combine_original_identical_versions": [
       "2.69 RC7.5",
       "2.69 RC7.6"
+    ]
+  },
+  "glossy_puddles": {
+    "source_package": "Glossy Puddles Overhaul v2.2 - Erandis",
+    "files": [
+      {
+        "component": "glossy_puddles_pbr",
+        "file": "deffer_impl_flat.ps",
+        "source": "Glossy Puddles v2.2 - PBR Puddles - Erandis\\gamedata\\shaders\\r3\\deffer_impl_flat.ps",
+        "original_sha256": "e1634de55eb22d956b1946f0f5c7a68274f045c628915b8fa59791f012c4c305",
+        "original_sha256_lf": "e1634de55eb22d956b1946f0f5c7a68274f045c628915b8fa59791f012c4c305",
+        "patched_sha256": "5f78bdc1cbc8a6285f2fb28d3bfd5a5deb38f921f150c740794688e616bdf917"
+      },
+      {
+        "component": "glossy_puddles_sss",
+        "file": "deffer_impl_flat.ps",
+        "source": "Glossy Puddles v2.2 - SSS Puddles - Erandis\\gamedata\\shaders\\r3\\deffer_impl_flat.ps",
+        "original_sha256": "858a120a0e8572d98a299a60d76ac55f3fcdb6b51ed467001749273b12aa2fd7",
+        "original_sha256_lf": "4722a531b571580040ee8285b4f6340bdf28a4185ee39c76a208c969c1e37089",
+        "patched_sha256": "1ea6b397eca4cad1716bb9fa63acd607a6ca0ed36409d817689b77101af7f478"
+      }
     ]
   }
 }

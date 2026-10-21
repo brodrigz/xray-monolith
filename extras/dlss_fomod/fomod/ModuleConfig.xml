@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-  <moduleName>DLSS / FSR3 Compatibility Patch - 0.61</moduleName>
+  <moduleName>DLSS / FSR3 Compatibility Patch - 0.63</moduleName>
   <requiredInstallFiles>
     <folder source="docs" destination="DLSS Compatibility - Instructions" priority="0" />
   </requiredInstallFiles>
@@ -11,7 +11,7 @@
           <plugins order="Explicit">
             <plugin name="SSS 23.5 compatibility - REQUIRED">
               <description>BEFORE INSTALLING
-- Install the 0.61 DLSS/FSR3 modded binaries into your Anomaly folder.
+- Install the 0.63 DLSS/FSR3 modded binaries into your Anomaly folder.
 - Install Screen Space Shaders 23.5 (already comes with gamma 0.9.5)
 
 AFTER INSTALLING
@@ -43,6 +43,9 @@ Atmospherics is optional. SSS 23.5 is still required.</description>
               <files>
                 <file source="selections\atmos_none.txt" destination="DLSS Compatibility - Instructions\Selected Atmospherics.txt" priority="0" />
               </files>
+              <conditionFlags>
+                <flag name="dlss_weather_family">sss</flag>
+              </conditionFlags>
               <typeDescriptor>
                 <type name="Optional" />
               </typeDescriptor>
@@ -57,12 +60,16 @@ Keep only one Atmospherics version enabled.</description>
               <files>
                 <file source="selections\atmos_26893.txt" destination="DLSS Compatibility - Instructions\Selected Atmospherics.txt" priority="0" />
               </files>
+              <conditionFlags>
+                <flag name="dlss_weather_family">sss</flag>
+              </conditionFlags>
               <typeDescriptor>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="Atmospherics 2.69 RC7.x">
-              <description>Choose this for Atmospherics 2.69 RC7.5 or above.
+            <plugin name="Atmospherics 2.69 RC7.5 to RC7.71">
+              <description>Choose this for Atmospherics 2.69 RC7.5, RC7.6, RC7.7 or RC7.71,
+with any AO, IL and SSR options picked in its installer.
 
 Keep only one Atmospherics version enabled.</description>
               <files>
@@ -71,6 +78,7 @@ Keep only one Atmospherics version enabled.</description>
               </files>
               <conditionFlags>
                 <flag name="dlss_atmos_rc7">On</flag>
+                <flag name="dlss_weather_family">pbr</flag>
               </conditionFlags>
               <typeDescriptor>
                 <type name="Optional" />
@@ -82,7 +90,7 @@ Keep only one Atmospherics version enabled.</description>
     </installStep>
     <installStep name="3. Other add-ons">
       <optionalFileGroups order="Explicit">
-        <group name="Select installed add-ons, or leave both unchecked" type="SelectAny">
+        <group name="Select installed add-ons, or leave all unchecked" type="SelectAny">
           <plugins order="Explicit">
             <plugin name="WearableDevices compatibility">
               <description>Select if WearableDevices is installed and enabled.
@@ -110,6 +118,25 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
+            <plugin name="Glossy Puddles Overhaul v2.2 compatibility">
+              <description>Select if Glossy Puddles Overhaul v2.2 (Erandis) is installed.
+Keeps its puddles and adds the ground motion vectors DLSS / FSR need.
+
+Matches the Atmospherics choice on page 2:
+- Atmospherics RC7.x: for "PBR Shader Based Weathers" in Glossy Puddles.
+- Otherwise: for "SSS Based Weathers" in Glossy Puddles.
+
+Keep the original Glossy Puddles mod enabled, above this patch.</description>
+              <files>
+                <file source="selections\glossy_puddles.txt" destination="DLSS Compatibility - Instructions\Glossy Puddles selected.txt" priority="0" />
+              </files>
+              <conditionFlags>
+                <flag name="dlss_glossy_puddles">On</flag>
+              </conditionFlags>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
           </plugins>
         </group>
       </optionalFileGroups>
@@ -117,6 +144,7 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
   </installSteps>
   <conditionalFileInstalls>
     <patterns>
+      <!-- RC7.7 / RC7.71's combine_2_naa.ps differs from RC7.6 only in comments. -->
       <pattern>
         <dependencies operator="And">
           <flagDependency flag="dlss_atmos_rc7" value="On" />
@@ -124,6 +152,25 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
         </dependencies>
         <files>
           <folder source="components\better_beefs_atmos_rc7\gamedata" destination="gamedata" priority="300" />
+        </files>
+      </pattern>
+      <!-- Glossy Puddles replaces deffer_impl_flat.ps; one version per weather family. -->
+      <pattern>
+        <dependencies operator="And">
+          <flagDependency flag="dlss_weather_family" value="pbr" />
+          <flagDependency flag="dlss_glossy_puddles" value="On" />
+        </dependencies>
+        <files>
+          <folder source="components\glossy_puddles_pbr\gamedata" destination="gamedata" priority="250" />
+        </files>
+      </pattern>
+      <pattern>
+        <dependencies operator="And">
+          <flagDependency flag="dlss_weather_family" value="sss" />
+          <flagDependency flag="dlss_glossy_puddles" value="On" />
+        </dependencies>
+        <files>
+          <folder source="components\glossy_puddles_sss\gamedata" destination="gamedata" priority="250" />
         </files>
       </pattern>
     </patterns>

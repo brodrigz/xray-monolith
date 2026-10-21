@@ -10,11 +10,18 @@ The canonical source for shared helpers, UI and existing RC7/WearableDevices
 overrides remains extras/dlss_gamma/gamedata. The FOMOD builder routes those
 files into separate components instead of installing them all unconditionally.
 
-extras/dlss_fomod/sss235 contains four newly prepared SSS 23.5 shader files.
-They replace the four Atmospherics files in the mandatory base component.
-The RC7.x choice overrides those base files with priority 100. WearableDevices
-is installed only when selected, with priority 200. RC7.5 and RC7.6 share
-one choice and payload because the four relevant original shaders are identical.
+Since 0.63 the patch replaces no ssfx_* shader (AO, IL, SSR, SSS, SSS-ext,
+water SSR). Earlier versions added an upscaler jitter offset to their history
+lookups, plus a per-tile noise offset in Atmospherics GTAO. A side-by-side
+test showed no visible difference, and the overrides had to track every SSS /
+Atmospherics release (RC7.7 reworked these shaders and broke the RC7.x set).
+SSS and Atmospherics now always use their own. The removed overrides remain
+in git history if the GTAO noise offset is ever needed again.
+
+extras/dlss_fomod/sss235 contains SSS 23.5's deffer_impl_flat.ps with motion
+vectors, installed by the mandatory base component. The RC7.x choice replaces
+it with Atmospherics' version at priority 100. WearableDevices is installed
+only when selected, with priority 200.
 
 The Better Beef's checkbox installs its three shader overrides at priority
 200. When combined with RC7.x, a conditional priority-300 merge replaces only
@@ -38,40 +45,45 @@ deffer_impl_flat.ps:
   Add the motion-vector header and assign O.velocity before returning.
   Keep SSS's 0.95 terrain material and 0.6 normal-strength values; do not copy
   Atmospherics' material sentinel or normal-strength changes into this file.
-
-ssfx_ao.ps:
-  Source: 01 - AO/gamedata/shaders/r3/ssfx_ao.ps
-  Add dlss_contract.h and wrap the history-coordinate expression.
-  Correct the original nested-loop typo: the j loop increments j, not i.
-  Both local copies of the original SSS archive contain that typo. Leaving
-  it intact leaves j unchanged and advances the outer sample index instead.
-  This correction is confined to the SSS base; RC7 uses its existing GTAO.
-
-ssfx_il.ps:
-  Source: 07 - Indirect Light/gamedata/shaders/r3/ssfx_il.ps
-  Add dlss_contract.h; wrap history sampling and bounds-check coordinates.
-  Retain SSS's original material classification and illumination algorithm.
-
-ssfx_sss_ext.ps:
-  Source: 02 - SSS/gamedata/shaders/r3/ssfx_sss_ext.ps
-  Add dlss_contract.h; wrap history sampling and bounds-check coordinates.
-  Retain SSS's original flora and terrain material comparisons.
-
-The shared temporal helper returns a zero history offset when the upscaler
-is inactive. No new C++ changes or binary rebuild are needed for this package.
+  SSS's Puddles module replaces the MV main file's version and drops the
+  velocity output; without it flat ground has no motion vectors.
 
 ATMOSPHERICS
 ------------
 The installed stock GAMMA Atmospherics package identifies its source as
-Atmospherics_GAMMA_2.68.93_hotfix3.7z. It supplies none of the four shaders
-listed above, so its choice retains the SSS base. No RC7 constants are added
-to stock Atmospherics or to SSS. Its separate sky shader includes
+Atmospherics_GAMMA_2.68.93_hotfix3.7z. It does not supply deffer_impl_flat.ps,
+so its choice retains the SSS base. Its separate sky shader includes
 night_vision.h, which is why the existing header remains in the shared base.
 
-The installed Atmospherics 2.69 RC7.5 and RC7.6 sources of these four shaders
-match after newline normalization. Their shared FOMOD choice reuses the existing
-extras/dlss_gamma overrides byte-for-byte. Files elsewhere in Atmospherics
-can differ; this does not claim that the entire versions are identical.
+Atmospherics 2.69 RC7.5, RC7.6, RC7.7 and RC7.71 share one choice. Their
+deffer_impl_flat.ps ("In common" in the RC7.7 / RC7.71 FOMODs) match after
+newline normalization, and the RC7.x component reuses the existing
+extras/dlss_gamma override (Atmospherics' file with motion vectors)
+byte-for-byte. It works with every AO / IL / SSR option in RC7.7 / RC7.71's
+installer, since none of them is touched. RC7.7 / RC7.71's combine_2_naa.ps
+differs from RC7.6 only in comments, so Better Beef's + RC7.x reuses
+better_beefs_atmos_rc7. RC7.71 shaders read the engine's ssfx_timedelta
+(frame time, frame number in .y), which these binaries bind.
+
+GLOSSY PUDDLES OVERHAUL V2.2
+----------------------------
+Source: Glossy Puddles Overhaul v2.2 - Erandis (local FOMOD). Glossy Puddles
+replaces deffer_impl_flat.ps without the motion-vector output, so flat ground
+loses temporal motion under DLSS / FSR. Its FOMOD ships two distinct versions
+of that file: "PBR Puddles" (PBR Shader Based Weathers, both the SSS 23.5 and
+SSS 24 / RC3 folders are identical) and "SSS Puddles" (SSS Based Weathers,
+likewise identical across SSS versions).
+
+glossy_puddles_pbr / glossy_puddles_sss deffer_impl_flat.ps:
+  Add #include "screenspace_mvectors.h" and assign O.velocity before
+  returning, exactly as in the other deffer_impl_flat.ps variants. Nothing
+  else edited. A user-reported fix for the PBR version made the same change.
+
+Every Atmospherics choice sets dlss_weather_family: pbr for RC7.x, sss
+otherwise. With the checkbox on, a conditional install at priority 250 picks
+the matching file. Its other files (scripts, terrain shader, SSR header) keep
+motion vectors or touch nothing this patch overrides and are not included.
+The shader_bus Lua API it uses is in these binaries (upstream 2026-10-11).
 
 WEARABLEDEVICES
 ---------------
@@ -135,7 +147,7 @@ From the repository root with Python 3.10 or later:
   python tools/dlss/package_compatibility.py
 
 Default output:
-  _build/releases/0.5/
+  _build/releases/<VERSION>/
 
 Use --output with a new directory for another build. The builder refuses to
 overwrite an existing output directory. It packages only explicit shader/UI
@@ -144,13 +156,13 @@ the user's current mod installation, compile shaders, run tests, launch MO2,
 change profiles or install binaries. Source archives are not needed to rebuild.
 
 The separate build MANIFEST.json lists archive member sizes and hashes.
-SOURCE_MANIFEST.json records provenance of the four SSS variants and the
-corresponding original Atmospherics files. Updating shader sources requires
+SOURCE_MANIFEST.json records provenance of the SSS, Atmospherics, Better
+Beef's and Glossy Puddles source files. Updating shader sources requires
 updating this provenance and the stated compatibility versions deliberately.
 
 STATUS
 ------
-The three-page installer and new SSS/stock-Atmospherics/Better Beef's variants have not
-been exercised in MO2 or in-game. No shader compilation tests were run.
-RC7 and WearableDevices reuse the existing 0.4 files. Packaging as release
-0.5 does not establish in-game verification of the new variants.
+0.63: the three-page installer was installed through MO2 and the game loaded
+with it; not every option combination was exercised. SSS, stock Atmospherics
+and RC7.71 shaders compile on top of this patch, and the Glossy Puddles
+shaders compile with the same results as the originals.

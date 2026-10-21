@@ -8,10 +8,10 @@ These overrides have new engine constants and must not be used with stock bins.
 
 Audited enabled loose-file providers in G.A.M.M.A. Co-op, 2026-10-07:
   190- Screen Space Shaders 23 - Ascii1457:
-    screenspace_mvectors.h, deffer_grass.vs,
-    ssfx_ssr.ps, ssfx_sss.ps, ssfx_water_ssr.ps
+    screenspace_mvectors.h, deffer_grass.vs
   Atmospherics 2.69 RC7.5:
-    deffer_impl_flat.ps, ssfx_ao.ps, ssfx_il.ps, ssfx_sss_ext.ps
+    deffer_impl_flat.ps
+  (Since 0.63 no ssfx_* shader is overridden; SSS / Atmospherics use their own.)
   189- Beef's NVG - theRealBeef:
     night_vision.h
   Optional WearableDevices:
