@@ -57,6 +57,59 @@ ICF float calcLOD(float ssa/*fDistSq*/, float R)
 	return _sqrt(clampr((ssa - r_ssaGLOD_end) / (r_ssaGLOD_start - r_ssaGLOD_end), 0.f, 1.f));
 }
 
+#ifdef USE_DX11
+// Previous-frame world matrix for dynamic visuals, keyed by the object's xform pointer.
+// Only the sky set m_w_prev before, so rigid dynamic meshes (props, items, doors)
+// built m_wvp_prev with an identity world and wrote garbage motion vectors.
+// Skinned meshes still override m_wvp_prev themselves in CSkeletonX::_Render.
+struct PrevWorldXform
+{
+	Fmatrix prev;
+	Fmatrix last;
+	u32 frame;
+};
+static xr_unordered_map<const Fmatrix*, PrevWorldXform> g_prev_world_xforms;
+
+static void set_dynamic_world_prev(const Fmatrix* M)
+{
+	if (!RImplementation.o.ssfx_motionvectors)
+		return;
+
+	const size_t count = g_prev_world_xforms.size();
+	PrevWorldXform& X = g_prev_world_xforms[M];
+	if (g_prev_world_xforms.size() != count)
+	{
+		X.prev = *M;
+		X.frame = Device.dwFrame;
+	}
+	else if (X.frame != Device.dwFrame)
+	{
+		// Not drawn last frame: no usable history, so assume no object motion
+		X.prev = (X.frame + 1 == Device.dwFrame) ? X.last : *M;
+		X.frame = Device.dwFrame;
+	}
+	X.last = *M;
+
+	RCache.set_xform_world_prev(X.prev);
+}
+
+static void prune_dynamic_world_prev()
+{
+	static u32 last_prune = 0;
+	if (Device.dwFrame - last_prune < 600)
+		return;
+	last_prune = Device.dwFrame;
+
+	for (auto it = g_prev_world_xforms.begin(); it != g_prev_world_xforms.end();)
+	{
+		if (Device.dwFrame - it->second.frame > 2)
+			it = g_prev_world_xforms.erase(it);
+		else
+			++it;
+	}
+}
+#endif
+
 template<typename T, bool Reverse>
 void CDSGraphManager::r_dsgraph_render_graph_sorted(R_dsgraph::mapDSGraphItems<T, Reverse>& graph, bool _clear)
 {
@@ -71,6 +124,9 @@ void CDSGraphManager::r_dsgraph_render_graph_sorted(R_dsgraph::mapDSGraphItems<T
 		VERIFY(V && V->shader._get());
 		RCache.set_Element(item.pSE);
 		RCache.set_xform_world(*item.pMatrix);
+#ifdef USE_DX11
+		set_dynamic_world_prev(item.pMatrix);
+#endif
 		RImplementation.apply_object(item.pObject);
 		RImplementation.apply_lmaterial();
 		//if (item.b_hud_mode)
@@ -84,11 +140,19 @@ void CDSGraphManager::r_dsgraph_render_graph_sorted(R_dsgraph::mapDSGraphItems<T
 		graph.clear();
 
 	RCache.set_xform_world(Fidentity);
+#ifdef USE_DX11
+	RCache.set_xform_world_prev(Fidentity);
+#endif
 }
 
 void CDSGraphManager::r_dsgraph_render_graph(RenderQueueArray& queues, u32 _priority, bool _clear, bool static_geometry)
 {
 	RCache.set_xform_world(Fidentity);
+#ifdef USE_DX11
+	RCache.set_xform_world_prev(Fidentity);
+	if (!static_geometry)
+		prune_dynamic_world_prev();
+#endif
 
 	for (u32 iPass = 0; iPass < SHADER_PASSES_MAX; ++iPass)
 	{
@@ -187,6 +251,9 @@ void CDSGraphManager::r_dsgraph_render_graph(RenderQueueArray& queues, u32 _prio
 			if (!static_geometry)
 			{
 				RCache.set_xform_world(*item.pMatrix);
+#ifdef USE_DX11
+				set_dynamic_world_prev(item.pMatrix);
+#endif
 				RImplementation.apply_object(item.pObject);
 				RImplementation.apply_lmaterial();
 			}
@@ -201,6 +268,11 @@ void CDSGraphManager::r_dsgraph_render_graph(RenderQueueArray& queues, u32 _prio
 		if (_clear)
 			queue.clear();
 	}
+
+#ifdef USE_DX11
+	if (!static_geometry)
+		RCache.set_xform_world_prev(Fidentity);
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////
