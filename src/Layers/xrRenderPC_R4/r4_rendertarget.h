@@ -443,7 +443,7 @@ public:
 	void phase_heatvision(); //--DSR-- HeatVision
 	void phase_3DSSReticle(); // Redotix99: for 3D Shader Based Scopes
 	bool ScopeAfterUpscale() const;
-	void phase_dlss_native_depth(float jitterX, float jitterY);
+	void phase_dlss_native_depth(float jitterX, float jitterY, bool lens = false);
 	void phase_dlss_scope(float jitterX, float jitterY);
 	void phase_lut();
 	void phase_smaa();
