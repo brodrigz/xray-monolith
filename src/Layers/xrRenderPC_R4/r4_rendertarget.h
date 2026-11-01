@@ -365,8 +365,15 @@ public:
 	ref_shader s_dlss_postprocess;
 	ref_shader s_dlss_copy;
 	ref_shader s_dlss_ui_depth;
+	// 3D shader scope lenses drawn after reconstruction; null without the copy shader.
+	// The display-resolution targets are created on the first scoped frame.
+	ref_shader s_dlss_scope_copy;
+	ref_rt rt_dlss_scope_color;
+	ref_rt rt_dlss_scope_position;
+	ref_rt rt_dlss_scope_heat;
 	ref_texture t_dlss_scene_depth;
 	bool reported_native_ui = false; // One diagnostic per target lifetime.
+	bool reported_native_scope = false;
 	ref_rt rt_dlss_post_source;
 	ref_rt rt_dlss_post_color;
 	ref_texture t_dlss_output;
@@ -435,6 +442,9 @@ public:
 	void phase_fakescope(); //crookr
 	void phase_heatvision(); //--DSR-- HeatVision
 	void phase_3DSSReticle(); // Redotix99: for 3D Shader Based Scopes
+	bool ScopeAfterUpscale() const;
+	void phase_dlss_native_depth(float jitterX, float jitterY);
+	void phase_dlss_scope(float jitterX, float jitterY);
 	void phase_lut();
 	void phase_smaa();
 	void phase_scene_prepare();

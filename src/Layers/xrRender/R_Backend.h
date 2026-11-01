@@ -222,6 +222,10 @@ private:
 
 	void Invalidate();
 public:
+	// Forget bound texture lists/stages so the next draw rebinds them
+	// (needed after a CTexture's surface was swapped while bound).
+	void InvalidateTextures();
+
 	struct _stats
 	{
 		u32 polys;

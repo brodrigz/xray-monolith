@@ -540,7 +540,8 @@ void CRenderTarget::phase_combine()
 		phase_ssfx_motion_blur();
 	}
 
-	if (scope_3D_fake_enabled)
+	// With an upscaler, lenses are drawn after reconstruction (phase_dlss_scope)
+	if (scope_3D_fake_enabled && !ScopeAfterUpscale())
 	{
 		phase_3DSSReticle(); // Redotix99: for 3D Shader Based Scopes
 	}
