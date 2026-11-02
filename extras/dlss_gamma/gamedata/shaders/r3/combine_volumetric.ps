@@ -3,6 +3,7 @@
 
 Texture2D noise_tex;
 uniform float4 ssfx_timedelta; // y = frame
+uniform float4 dlss_volumetric_params; // xy = raster jitter in UV, z = drawn after reconstruction
 
 //	Igor: used for volumetric light
 #ifndef USE_MSAA
@@ -34,7 +35,8 @@ _out main( _input I )
 
 #ifndef USE_MSAA // Get Volumetric Buffer [ No MSAA ]
 
-	color = s_vollight.SampleLevel( smp_linear, I.tc0.xy, 0);
+	// After reconstruction the rest of the frame is unjittered, but this buffer is not.
+	color = s_vollight.SampleLevel( smp_linear, I.tc0.xy + dlss_volumetric_params.xy, 0);
 
 	// Read Depth
 	float _depth = s_position.Sample(smp_nofilter, I.tc0.xy).z;
@@ -60,8 +62,9 @@ _out main( _input I )
 
 	// Upscaling: a screen-fixed pattern does not move with the jittered scene, so the
 	// upscaler keeps it as static grain when the camera is still. Move it every frame
-	// (R2 sequence) so it averages out instead.
-	if (dlss_params.x > 0.5f)
+	// (R2 sequence) so it averages out instead. Drawn after reconstruction, nothing
+	// averages it, so it stays fixed.
+	if (dlss_params.x > 0.5f && dlss_volumetric_params.z < 0.5f)
 		uv_noise += frac(fmod(ssfx_timedelta.y, 1024.0f) * float2(0.7548777f, 0.5698403f)); // wraps
 
 	// Add noise to dither the result

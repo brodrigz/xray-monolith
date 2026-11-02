@@ -948,6 +948,11 @@ void CRenderTarget::phase_combine_volumetric(bool high)
 
 		// Draw
 		RCache.set_Element(s_combine_volumetric->E[0]);
+		if (dlss_post_swapped)
+			RCache.set_c("dlss_volumetric_params", dlss_post_jitter.x / float(dlss::RenderWidth()),
+				dlss_post_jitter.y / float(dlss::RenderHeight()), 1.f, 0.f);
+		else
+			RCache.set_c("dlss_volumetric_params", 0.f, 0.f, 0.f, 0.f);
 		//RCache.set_Geometry			(g_combine_VP		);
 		RCache.set_Geometry(g_combine);
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
