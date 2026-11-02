@@ -65,19 +65,24 @@ differs from RC7.6 only in comments, so Better Beef's + RC7.x reuses
 better_beefs_atmos_rc7. RC7.71 shaders read the engine's ssfx_timedelta
 (frame time, frame number in .y), which these binaries bind.
 
-GLOSSY PUDDLES OVERHAUL V2.2
+GLOSSY PUDDLES OVERHAUL V2.3
 ----------------------------
-Source: Glossy Puddles Overhaul v2.2 - Erandis (local FOMOD). Glossy Puddles
+Source: Glossy Puddles Overhaul v2.3 - Erandis (local FOMOD). Glossy Puddles
 replaces deffer_impl_flat.ps without the motion-vector output, so flat ground
 loses temporal motion under DLSS / FSR. Its FOMOD ships two distinct versions
 of that file: "PBR Puddles" (PBR Shader Based Weathers, both the SSS 23.5 and
 SSS 24 / RC3 folders are identical) and "SSS Puddles" (SSS Based Weathers,
-likewise identical across SSS versions).
+likewise identical across SSS versions). Its folders keep the v2.2 names.
 
 glossy_puddles_pbr / glossy_puddles_sss deffer_impl_flat.ps:
   Add #include "screenspace_mvectors.h" and assign O.velocity before
   returning, exactly as in the other deffer_impl_flat.ps variants. Nothing
   else edited. A user-reported fix for the PBR version made the same change.
+  v2.3 changed only the PBR file: bus_erandis is now declared behind
+  GP_BUS_ERANDIS_DECLARED, because its settings_screenspace_PUDDLES.h also
+  declares it. Without that guard the PBR file fails to compile against
+  v2.3. The SSS file is unchanged from v2.2. Both patched files also work
+  with v2.2.
 
 Every Atmospherics choice sets dlss_weather_family: pbr for RC7.x, sss
 otherwise. With the checkbox on, a conditional install at priority 250 picks

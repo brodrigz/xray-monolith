@@ -18,7 +18,7 @@ ARCHIVE_NAME = f"dlss-binaries-GAMMA-compatibility-patch-{VERSION}.zip"
 # The only shader Atmospherics RC7.x and this patch both replace. SSS and Atmospherics
 # keep their own ssfx_* shaders; the upscaler needs no changes in them.
 ATMOS_FILES = ("deffer_impl_flat.ps",)
-# Glossy Puddles Overhaul v2.2 deffer_impl_flat.ps, one per weather family.
+# Glossy Puddles Overhaul v2.3 deffer_impl_flat.ps, one per weather family.
 GLOSSY_PUDDLES = ("glossy_puddles_pbr", "glossy_puddles_sss")
 
 
@@ -77,7 +77,7 @@ def build(output: Path) -> None:
         "atmos_rc7.txt": "Selected: Atmospherics 2.69 RC7.x (RC7.5 to RC7.71).",
         "wearable.txt": "Selected: WearableDevices compatibility.",
         "better_beefs.txt": "Selected: Better Beef's NVGs (.19) compatibility.",
-        "glossy_puddles.txt": "Selected: Glossy Puddles Overhaul v2.2 compatibility.",
+        "glossy_puddles.txt": "Selected: Glossy Puddles Overhaul v2.3 compatibility.",
     }
     for name, description in selections.items():
         write_text(stage / "selections" / name, f"{description}\nPatch: {VERSION}\n")

@@ -36,7 +36,7 @@ Better Beef's NVGs (.19):
   Put its patches below its main files, and this compatibility patch last.
   Clear the shader cache through the launcher after changing NVG mods.
 
-Glossy Puddles Overhaul v2.2 (Erandis):
+Glossy Puddles Overhaul v2.3 (Erandis, v2.2 also works):
   Select only if the original mod is installed and enabled.
   The patch picks the matching version from your Atmospherics choice:
     Atmospherics RC7.x -> Glossy Puddles "PBR Shader Based Weathers"
