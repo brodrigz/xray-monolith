@@ -21,6 +21,8 @@ Audited enabled loose-file providers in G.A.M.M.A. Co-op, 2026-10-07:
     wd_body.vs (body and alpha-tested chassis/bracer materials)
   New integration files:
     dlss_contract.h, dlss_copy.ps, dlss_cas.h, dlss_sharpen.ps, dlss_ui_depth.ps
+    dlss_display_copy.ps, dlss_sunshaft_mask.ps, dlss_hdr.h, dlss_hdr_encode.ps,
+    dlss_hdr_decode.ps, dlss_debug_mv.ps
     scripts/modxml_dlss_options.script
     configs/text/eng/st_monolith_dlss.xml
 

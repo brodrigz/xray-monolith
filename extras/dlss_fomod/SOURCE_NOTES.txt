@@ -167,6 +167,10 @@ updating this provenance and the stated compatibility versions deliberately.
 
 STATUS
 ------
+0.7: the patch's own shaders compile on SSS 23.5, stock Atmospherics and RC7.71.
+The test build of this patch was installed through MO2 with the RC7.x choice and
+played; the other installer choices were not exercised.
+
 0.63: the three-page installer was installed through MO2 and the game loaded
 with it; not every option combination was exercised. SSS, stock Atmospherics
 and RC7.71 shaders compile on top of this patch, and the Glossy Puddles
