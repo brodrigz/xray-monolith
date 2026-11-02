@@ -14,7 +14,6 @@ REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "extras/dlss_fomod"
 LEGACY = REPO / "extras/dlss_gamma/gamedata"
 VERSION = "0.63"
-ARCHIVE_NAME = f"dlss-binaries-GAMMA-compatibility-patch-{VERSION}.zip"
 # The only shader Atmospherics RC7.x and this patch both replace. SSS and Atmospherics
 # keep their own ssfx_* shaders; the upscaler needs no changes in them.
 ATMOS_FILES = ("deffer_impl_flat.ps",)
@@ -32,7 +31,8 @@ def write_text(destination: Path, content: str) -> None:
     destination.write_text(content, encoding="utf-8", newline="\n")
 
 
-def build(output: Path) -> None:
+def build(output: Path, version: str = VERSION) -> None:
+    archive_name = f"dlss-binaries-GAMMA-compatibility-patch-{version}.zip"
     # A fresh staging directory prevents stale optional files entering an archive.
     output.mkdir(parents=True, exist_ok=False)
     stage = output / "package"
@@ -80,11 +80,11 @@ def build(output: Path) -> None:
         "glossy_puddles.txt": "Selected: Glossy Puddles Overhaul v2.3 compatibility.",
     }
     for name, description in selections.items():
-        write_text(stage / "selections" / name, f"{description}\nPatch: {VERSION}\n")
+        write_text(stage / "selections" / name, f"{description}\nPatch: {version}\n")
 
     manifest = {
-        "package": ARCHIVE_NAME,
-        "binary_release": VERSION,
+        "package": archive_name,
+        "binary_release": version,
         "status": "release package; no MO2, shader compilation or in-game validation performed for the new variants",
         "files": [
             {
@@ -97,7 +97,7 @@ def build(output: Path) -> None:
     }
     write_text(output / "MANIFEST.json", json.dumps(manifest, indent=2) + "\n")
 
-    archive = output / ARCHIVE_NAME
+    archive = output / archive_name
     with ZipFile(archive, "w", compression=ZIP_DEFLATED, compresslevel=9) as package:
         for path in sorted(stage.rglob("*")):
             if path.is_file():
@@ -106,7 +106,7 @@ def build(output: Path) -> None:
                 entry.external_attr = 0o644 << 16
                 package.writestr(entry, path.read_bytes(), compresslevel=9)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
-    write_text(output / f"SHA256SUMS-{VERSION}.txt", f"{digest}  {ARCHIVE_NAME}\n")
+    write_text(output / f"SHA256SUMS-{version}.txt", f"{digest}  {archive_name}\n")
     print(f"Created {archive} ({archive.stat().st_size:,} bytes)")
     print(f"SHA256 {digest}")
 
@@ -118,4 +118,6 @@ if __name__ == "__main__":
         default=REPO / "_build/releases" / VERSION,
         help="New output directory; existing directories are never overwritten.",
     )
-    build(parser.parse_args().output.resolve())
+    parser.add_argument("--version", default=VERSION, help="Name the archive after a test build.")
+    args = parser.parse_args()
+    build(args.output.resolve(), args.version)
