@@ -10,6 +10,8 @@ Audited enabled loose-file providers in G.A.M.M.A. Co-op, 2026-10-07:
   190- Screen Space Shaders 23 - Ascii1457:
     screenspace_mvectors.h, deffer_grass.vs, combine_volumetric.ps (beam noise
     moves every frame while upscaling, else unchanged)
+  Base game:
+    particle.vs, particle-clip.vs (upscaler jitter)
   Atmospherics 2.69 RC7.5:
     deffer_impl_flat.ps
   (Since 0.63 no ssfx_* shader is overridden; SSS / Atmospherics use their own.)
