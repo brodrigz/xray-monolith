@@ -91,7 +91,7 @@ public:
     void Compile(CBlender_Compile& C) override
     {
         IBlender::Compile(C);
-        if (C.iElement > 3) return;
+        if (C.iElement > 4) return;
         if (C.iElement == 3)
         {
             // r_upscaler_debug 2: motion vectors
@@ -101,8 +101,9 @@ public:
             C.r_End();
             return;
         }
+        // 4: the scene before the post chain (fallback/debug when post runs after reconstruction)
         C.r_Pass("stub_screen_space", C.iElement == 2 ? "dlss_sharpen" : "dlss_copy", FALSE, FALSE, FALSE);
-        C.r_dx10Texture("s_image", C.iElement == 1 ? r2_RT_albedo : "$user$dlss_output");
+        C.r_dx10Texture("s_image", C.iElement == 1 ? r2_RT_albedo : C.iElement == 4 ? r2_RT_generic0 : "$user$dlss_output");
         C.r_dx10Sampler("smp_rtlinear");
         C.r_End();
     }
@@ -135,10 +136,13 @@ public:
     void Compile(CBlender_Compile& C) override
     {
         IBlender::Compile(C);
-        // Scope lenses Load these with display pixel coordinates after reconstruction.
-        if (C.iElement > 1) return;
+        // Scope lenses and the post chain Load these with display pixel coordinates
+        // after reconstruction.
+        static constexpr LPCSTR sources[] = {r2_RT_P, r2_RT_heat, r2_RT_ssfx_motion_vectors, r2_RT_generic1,
+            r2_RT_ssfx_bloom_emissive};
+        if (C.iElement >= int(std::size(sources))) return;
         C.r_Pass("stub_screen_space", "dlss_scope_copy", FALSE, FALSE, FALSE);
-        C.r_dx10Texture("s_image", C.iElement == 0 ? r2_RT_P : r2_RT_heat);
+        C.r_dx10Texture("s_image", sources[C.iElement]);
         C.r_End();
     }
 };
@@ -1416,12 +1420,44 @@ CRenderTarget::CRenderTarget()
 		s_dlss_postprocess.create(&blender, "dlss_postprocess");
 		CBlender_dlss_copy copy;
 		s_dlss_copy.create(&copy, "dlss_copy");
-		// Optional: older shader patches keep drawing 3D scope lenses before reconstruction.
+		// Optional: older shader patches keep drawing 3D scope lenses and the post
+		// chain before reconstruction.
 		string_path scopeCopy;
 		if (FS.exist(scopeCopy, "$game_shaders$", "r3\\dlss_scope_copy", ".ps"))
 		{
 			CBlender_dlss_scope_copy scope;
 			s_dlss_scope_copy.create(&scope, "dlss_scope_copy");
+		}
+		if (s_dlss_scope_copy && !RImplementation.o.dx10_msaa)
+		{
+			// Twins keep their scene target's format: the post shaders rely on the
+			// UNORM targets' [0,1] clamp. The reconstructed scene comes first; the
+			// inputs read by pixel are resampled.
+			dlss_post_twin(rt_Generic_0);
+			dlss_post_twin(rt_Position, 1.f, 0);
+			dlss_post_twin(rt_ssfx_motion_vectors, 1.f, 2);
+			dlss_post_twin(rt_Generic_1, 1.f, 3);
+			dlss_post_twin(rt_ssfx_bloom_emissive, 1.f, 4);
+			// Written by the post chain. Divisors match the scene targets above.
+			for (ref_rt* rt : {&rt_Generic, &rt_Color, &rt_sunshafts_0, &rt_sunshafts_1, &rt_pp_bloom, &rt_dof})
+				dlss_post_twin(*rt);
+			for (ref_rt* rt : {&rt_blur_h_2, &rt_blur_2, &rt_ssfx_bloom1, &rt_ssfx_bloom_tmp2, &rt_HDR10_HalfRes[0],
+				&rt_HDR10_HalfRes[1]})
+				dlss_post_twin(*rt, 2.f);
+			for (ref_rt* rt : {&rt_blur_h_4, &rt_blur_4, &rt_ssfx_bloom_lens, &rt_ssfx_bloom_tmp4, &rt_ssfx_bloom_tmp4_2})
+				dlss_post_twin(*rt, 4.f);
+			for (ref_rt* rt : {&rt_blur_h_8, &rt_blur_8, &rt_ssfx_bloom_tmp8, &rt_ssfx_bloom_tmp8_2})
+				dlss_post_twin(*rt, 8.f);
+			dlss_post_twin(rt_ssfx_bloom_tmp16, 16.f);
+			dlss_post_twin(rt_ssfx_bloom_tmp16_2, 16.f);
+			dlss_post_twin(rt_ssfx_bloom_tmp32, 32.f);
+			dlss_post_twin(rt_ssfx_bloom_tmp32_2, 32.f);
+			dlss_post_twin(rt_ssfx_bloom_tmp64, 64.f);
+		}
+		else
+		{
+			Msg("! [Upscaler] %s: post-processing and 3D scope lenses stay before reconstruction",
+				s_dlss_scope_copy ? "MSAA is on" : "shaders\\r3\\dlss_scope_copy.ps not found (outdated compatibility patch?)");
 		}
 	}
 	g_postprocess.create(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX3, RCache.Vertex.Buffer(),
@@ -1443,6 +1479,7 @@ CRenderTarget::CRenderTarget()
 
 CRenderTarget::~CRenderTarget()
 {
+	dlss_post_restore();
 	if (t_dlss_output) t_dlss_output->surface_set(nullptr);
 	if (t_dlss_scene_depth) t_dlss_scene_depth->surface_set(nullptr);
 	dlss::ReleaseTargets();

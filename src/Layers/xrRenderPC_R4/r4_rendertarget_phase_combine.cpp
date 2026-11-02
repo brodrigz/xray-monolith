@@ -453,6 +453,7 @@ void CRenderTarget::phase_combine()
 		if (m_bHasActiveVolumetric)
 			phase_combine_volumetric();
 	}
+	const bool postAfterUpscale = DlssPostAfterUpscale();
 
 	// Perform blooming filter and distortion if needed
 	RCache.set_Stencil(FALSE);
@@ -516,8 +517,14 @@ void CRenderTarget::phase_combine()
 	   */
 	RCache.set_Stencil(FALSE);
 
-
-
+	// With an upscaler, reconstruct here: the rest of the post chain runs at display resolution.
+	if (postAfterUpscale)
+	{
+		// Only scene passes read the previous positions: keep them render-sized.
+		if (ssfx_PrevPos_Requiered)
+			HW.pContext->CopyResource(rt_ssfx_prevPos->pTexture->surface_get(), rt_Position->pTexture->surface_get());
+		dlss_post_upscale();
+	}
 
 	if (!_menu_pp)
 	{
@@ -600,7 +607,7 @@ void CRenderTarget::phase_combine()
 	}
 
     //SMAA
-	if (ps_smaa_quality && !dlss::Active())
+	if (ps_smaa_quality && !postAfterUpscale && !dlss::Active())
 	{
         //PIX_EVENT(SMAA);
         phase_smaa();
@@ -612,7 +619,7 @@ void CRenderTarget::phase_combine()
 		phase_ssfx_taa();
 	}
 
-	if (ssfx_PrevPos_Requiered)
+	if (ssfx_PrevPos_Requiered && !postAfterUpscale)
 		HW.pContext->CopyResource(rt_ssfx_prevPos->pTexture->surface_get(), rt_Position->pTexture->surface_get());
 
 	// PP enabled ?
