@@ -741,8 +741,11 @@ CRenderTarget::CRenderTarget()
 			rt_ssfx_bloom_tmp4_2.create(r2_RT_ssfx_bloom_tmp4_2, w / 4.0f, h / 4.0f, D3DFMT_A16B16G16R16F); // Bloom / 4
 		}
 
-		rt_ssfx_volumetric.create(r2_RT_ssfx_volumetric, w / 8.0f, h / 8.0f, D3DFMT_A16B16G16R16F); // Volumetric
-		rt_ssfx_volumetric_tmp.create(r2_RT_ssfx_volumetric_tmp, w / 8.0f, h / 8.0f, D3DFMT_A16B16G16R16F); // Volumetric
+		// Volumetric lights are drawn and blurred with a 1/volsize viewport (-volumetric1/2/4,
+		// default 8): size the buffers to match
+		const float volsize = float(RImplementation.o.volsize);
+		rt_ssfx_volumetric.create(r2_RT_ssfx_volumetric, w / volsize, h / volsize, D3DFMT_A16B16G16R16F); // Volumetric
+		rt_ssfx_volumetric_tmp.create(r2_RT_ssfx_volumetric_tmp, w / volsize, h / volsize, D3DFMT_A16B16G16R16F); // Volumetric
 		rt_ssfx_rain.create(r2_RT_ssfx_rain, w / 8.0f, h / 8.0f, D3DFMT_A8R8G8B8); // Rain refraction buffer
 		rt_ssfx_water_waves.create(r2_RT_ssfx_water_waves, 512, 512, D3DFMT_A8R8G8B8); // Water Waves
 
