@@ -20,6 +20,7 @@ xr_token fsr3_quality_token[] = {
 u32 ps_r_dlss_preset = 0;
 float ps_r_dlss_sharpness = 0.0f;
 int ps_r_upscaler_debug = 0;
+int ps_r_dlss_hdr_input = 1;
 xr_token dlss_preset_token[] = {
     {"default", 0}, {"j", 10}, {"k", 11}, {"l", 12}, {"m", 13}, {nullptr, 0}
 };
@@ -1656,6 +1657,8 @@ void xrRender_initconsole()
 	CMD3(CCC_Token, "r_fsr3_quality", &ps_r_fsr3_quality, fsr3_quality_token);
 	CMD3(CCC_Token, "r_dlss_preset", &ps_r_dlss_preset, dlss_preset_token);
 	CMD4(CCC_Float, "r_dlss_sharpness", &ps_r_dlss_sharpness, 0.0f, 1.0f);
+	// Linear HDR input for DLSS, with a reversible curve around it; needs vid_restart
+	CMD4(CCC_Integer, "r_dlss_hdr_input", &ps_r_dlss_hdr_input, 0, 1);
 	// 1 = upscaler input (render resolution, stretched), 2 = motion vectors
 	CMD4(CCC_UnsavedInteger, "r_upscaler_debug", &ps_r_upscaler_debug, 0, 2);
 #endif

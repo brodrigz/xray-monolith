@@ -472,7 +472,10 @@ void CDSGraphManager::r_dsgraph_render_sorted_hud()
 {
 	PROF_EVENT("r_dsgraph_render_sorted_hud");
 #if	RENDER==R_R4
-	HW.pContext->CopyResource(RImplementation.Target->rt_Accumulator->pSurface, RImplementation.Target->rt_Generic_0->pSurface);
+	// With an 8-bit scene the formats differ and the copy does nothing. Keep it so
+	// when the scene is held in floating point for the upscaler.
+	if (!RImplementation.Target->dlss_hdr_swapped)
+		HW.pContext->CopyResource(RImplementation.Target->rt_Accumulator->pSurface, RImplementation.Target->rt_Generic_0->pSurface);
 #endif
 	CHudInitializer initializer(true);
 
