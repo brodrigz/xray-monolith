@@ -32,6 +32,16 @@ float4 DlssCas(float2 uv)
     mx += max(mx, max(max(a, c), max(g, i)));
     // Guard black neighborhoods against 0/0; sqrt avoids reciprocal infinity.
     float3 amplitude = sqrt(saturate(min(mn, 2.0 - mx) / max(mx, 1e-6)));
+#ifdef DLSS_CAS_HDR
+    // The HDR curve exaggerates contrast compared with display values, which weakens
+    // CAS on fine detail. Estimated from the center pixel alone, so it fades out on
+    // edges, where a wrong estimate would add halos.
+    float3 contrast = saturate(mn / max(mx, 1e-6));
+    float level = max(max(original.r, max(original.g, original.b)), 0.0);
+    level /= 1.0 + DLSS_HDR_SLOPE * level;
+    float slope = 2.2 * (1.0 + sqrt(level)) / (1.0 + level / 16.0);
+    amplitude = lerp(amplitude, pow(contrast, 1.0 / (1.0 + slope)), contrast);
+#endif
     float3 weight = -amplitude / 5.0;
     float3 sharpened = saturate(((b + d + f + h) * weight + e) / (1.0 + 4.0 * weight));
     float3 result = lerp(e, sharpened, strength);
