@@ -13,7 +13,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "extras/dlss_fomod"
 LEGACY = REPO / "extras/dlss_gamma/gamedata"
-VERSION = "0.7"
+VERSION = "0.71"
 # The only shader Atmospherics RC7.x and this patch both replace. SSS and Atmospherics
 # keep their own ssfx_* shaders; the upscaler needs no changes in them.
 ATMOS_FILES = ("deffer_impl_flat.ps",)

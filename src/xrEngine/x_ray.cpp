@@ -1118,7 +1118,7 @@ int APIENTRY WinMain_impl(HINSTANCE hInstance,
 #else
 	const char* const binaryVariant = "DX11";
 #endif
-	Msg("[DLSS/FSR] xray-monolith DLSS/FSR 0.7 (%s), built %s", binaryVariant, __DATE__);
+	Msg("[DLSS/FSR] xray-monolith DLSS/FSR 0.71 (%s), built %s", binaryVariant, __DATE__);
 
 	{
 		FS_FileSet fset;

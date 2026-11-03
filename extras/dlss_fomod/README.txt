@@ -1,9 +1,9 @@
-DLSS / FSR3 COMPATIBILITY PATCH - 0.7
+DLSS / FSR3 COMPATIBILITY PATCH - 0.71
 https://github.com/brodrigz/xray-monolith
 
 INSTALL
 -------
-1. Install the 0.7 DLSS / FSR3 binaries using that release's instructions.
+1. Install the 0.71 DLSS / FSR3 binaries using that release's instructions.
 2. Install and enable SSS 23.5 with GAMMA's recommended options.
 3. Install this ZIP through MO2:
    - Page 1: leave the required SSS 23.5 option checked.
