@@ -37,6 +37,10 @@ not apply to the current selection are hidden.
 - DLSS Linear Input (r_dlss_hdr_input). DLSS only. Needs a renderer restart.
   On by default. Not used with HDR10 output or MSAA.
 
+Engine
+- Merged upstream Anomaly engine updates through 2026-11-02, including a fix for
+  a crash when a script reads a file list for a folder the game has not indexed.
+
 KNOWN ISSUES
 - FSR frame generation: lasers and red dot reticles leave two dim afterimages on
   fast camera moves. DLSS-G and no frame generation are not affected.
@@ -191,9 +195,9 @@ Full credits and licenses are included in the binaries package.
 
 TEST STATUS
 Built: DX11, DX11-AVX and DX12 Release.
-Played by the developer on GAMMA with Atmospherics RC7.71, using a DX11 build of
-this release's source with DLSS, and an earlier build with FSR for the particle
-comparison. The patch's own shaders compile on SSS 23.5, stock Atmospherics and
+Played by the developer on GAMMA with Atmospherics RC7.71, using a DX11 build that
+differs from this release only by the upstream merge, with DLSS, and an earlier
+build with FSR for the particle comparison. The patch's own shaders compile on SSS 23.5, stock Atmospherics and
 RC7.71. The menu passes its script test.
 Not tested in game: the DX12 and AVX executables of this release, frame generation
 on this release, the Upscaled sunshaft mode, the DLSS Linear Input menu row, this
