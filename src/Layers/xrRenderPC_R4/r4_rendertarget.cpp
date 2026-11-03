@@ -119,10 +119,11 @@ public:
     void Compile(CBlender_Compile& C) override
     {
         IBlender::Compile(C);
-        if (C.iElement > 1) return;
-        // 0: the finished scene to linear HDR; 1: the reconstruction back, with optional CAS
-        C.r_Pass("stub_screen_space", C.iElement == 0 ? "dlss_hdr_encode" : "dlss_hdr_decode", FALSE, FALSE, FALSE);
-        C.r_dx10Texture("s_image", C.iElement == 0 ? r2_RT_generic0 : "$user$dlss_output");
+        if (C.iElement > 2) return;
+        // 0: the finished scene to linear HDR; 1: the reconstruction back, with optional CAS;
+        // 2: as 0, when the post chain stays before reconstruction and ends in rt_Color
+        C.r_Pass("stub_screen_space", C.iElement == 1 ? "dlss_hdr_decode" : "dlss_hdr_encode", FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_image", C.iElement == 0 ? r2_RT_generic0 : C.iElement == 2 ? r2_RT_albedo : "$user$dlss_output");
         C.r_dx10Sampler("smp_nofilter");
         C.r_dx10Sampler("smp_rtlinear");
         C.r_End();
@@ -1510,10 +1511,6 @@ CRenderTarget::CRenderTarget()
 			}
 			if (dlss::HdrInput())
 			{
-				CBlender_dlss_hdr hdr;
-				s_dlss_hdr.create(&hdr, "dlss_hdr");
-				rt_dlss_hdr_input.create("$user$dlss_hdr_input", rt_Generic_0->dwWidth, rt_Generic_0->dwHeight,
-					D3DFMT_A16B16G16R16F);
 				// The water/glass copy must match the scene's format to stay valid, and so
 				// must rt_Generic: sunshafts before the upscaler copy their blend back from it.
 				for (ref_rt* rt : {&rt_Generic_0, &rt_Generic_temp, &rt_Generic})
@@ -1524,13 +1521,21 @@ CRenderTarget::CRenderTarget()
 					twin.display.create(name, (*rt)->dwWidth, (*rt)->dwHeight, D3DFMT_A16B16G16R16F);
 					dlss_hdr_twins.push_back(twin);
 				}
-				Msg("[Upscaler] DLSS HDR input: floating-point scene, linear with a reversible highlight curve");
 			}
 		}
 		else
 		{
 			Msg("! [Upscaler] %s: post-processing, volumetric lights and 3D scope lenses stay before reconstruction",
 				s_dlss_display_copy ? "MSAA is on" : "shaders\\r3\\dlss_display_copy.ps not found (outdated compatibility patch?)");
+		}
+		if (dlss::HdrInput())
+		{
+			CBlender_dlss_hdr hdr;
+			s_dlss_hdr.create(&hdr, "dlss_hdr");
+			rt_dlss_hdr_input.create("$user$dlss_hdr_input", rt_Generic_0->dwWidth, rt_Generic_0->dwHeight,
+				D3DFMT_A16B16G16R16F);
+			Msg("[Upscaler] DLSS HDR input: %s scene, linear with a reversible highlight curve",
+				dlss_hdr_twins.empty() ? "8-bit" : "floating-point");
 		}
 	}
 	g_postprocess.create(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_SPECULAR | D3DFVF_TEX3, RCache.Vertex.Buffer(),

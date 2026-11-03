@@ -1668,7 +1668,7 @@ void xrRender_initconsole()
 	CMD4(CCC_Integer, "r_upscaler_post_after", &ps_r_upscaler_post_after, 0, 1);
 	// 0 = particles stay before the upscaler while the rest stays after: cheaper, but they smear again
 	CMD4(CCC_Integer, "r_upscaler_particles_after", &ps_r_upscaler_particles_after, 0, 1);
-	// Linear HDR input for DLSS, with a reversible curve around it; needs r_upscaler_post_after and vid_restart
+	// Linear HDR input for DLSS, with a reversible curve around it; needs vid_restart
 	CMD4(CCC_Integer, "r_dlss_hdr_input", &ps_r_dlss_hdr_input, 0, 1);
 	// 1 = upscaler input (render resolution, stretched), 2 = motion vectors
 	CMD4(CCC_UnsavedInteger, "r_upscaler_debug", &ps_r_upscaler_debug, 0, 2);

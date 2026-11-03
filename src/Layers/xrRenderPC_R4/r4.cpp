@@ -406,7 +406,7 @@ void CRender::create()
 	o.dx10_msaa = ps_r3_msaa && !o.dx11_hdr10;
 	o.dx10_msaa_samples = o.dx11_hdr10 ? 1 : (1 << ps_r3_msaa);
 
-	// DLSS HDR input needs the post chain after reconstruction and the patch's shaders.
+	// DLSS HDR input needs the patch's shaders.
 	// The console options are read when DLSS is created, so vid_restart applies them.
 	string_path hdrShader, displayCopyShader;
 	o.dlss_hdr_input = !o.dx11_hdr10 && !o.dx10_msaa &&

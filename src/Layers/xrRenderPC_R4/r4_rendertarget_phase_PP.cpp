@@ -260,26 +260,7 @@ void CRenderTarget::dlss_post_upscale()
 	dlss_post_jitter.set(jitter.x, jitter.y);
 	ID3DTexture2D* color = rt_Generic_0->pSurface;
 	if (dlss_hdr_swapped)
-	{
-		// The finished scene, still in display values, to linear HDR at render size.
-		const float rw = float(rt_dlss_hdr_input->dwWidth), rh = float(rt_dlss_hdr_input->dwHeight);
-		u32 offset;
-		FVF::TL* quad = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, offset);
-		quad[0].set(0, rh, EPS_S, 1, 0xffffffff, 0, 1);
-		quad[1].set(0, 0, EPS_S, 1, 0xffffffff, 0, 0);
-		quad[2].set(rw, rh, EPS_S, 1, 0xffffffff, 1, 1);
-		quad[3].set(rw, 0, EPS_S, 1, 0xffffffff, 1, 0);
-		RCache.Vertex.Unlock(4, g_combine->vb_stride);
-		u_setrt(rt_dlss_hdr_input, nullptr, nullptr, nullptr);
-		RImplementation.rmNormal();
-		RCache.set_CullMode(CULL_NONE);
-		RCache.set_Stencil(FALSE);
-		RCache.set_ColorWriteEnable();
-		RCache.set_Element(s_dlss_hdr->E[0]);
-		RCache.set_Geometry(g_combine);
-		RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
-		color = rt_dlss_hdr_input->pSurface;
-	}
+		color = dlss_hdr_encode(0);
 	dlss_post_output = dlss::Evaluate(color, rt_ssfx_motion_vectors->pSurface);
 	dlss::EndScene();
 	if (!reported_post_chain)
@@ -343,6 +324,28 @@ void CRenderTarget::dlss_post_restore()
 		(*twin.scene)->swap_storage(*twin.display);
 	dlss_post_swapped = false;
 	RCache.InvalidateTextures();
+}
+
+// The finished scene, still in display values, to linear HDR at render size.
+ID3DTexture2D* CRenderTarget::dlss_hdr_encode(u32 element)
+{
+	const float rw = float(rt_dlss_hdr_input->dwWidth), rh = float(rt_dlss_hdr_input->dwHeight);
+	u32 offset;
+	FVF::TL* quad = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, offset);
+	quad[0].set(0, rh, EPS_S, 1, 0xffffffff, 0, 1);
+	quad[1].set(0, 0, EPS_S, 1, 0xffffffff, 0, 0);
+	quad[2].set(rw, rh, EPS_S, 1, 0xffffffff, 1, 1);
+	quad[3].set(rw, 0, EPS_S, 1, 0xffffffff, 1, 0);
+	RCache.Vertex.Unlock(4, g_combine->vb_stride);
+	u_setrt(rt_dlss_hdr_input, nullptr, nullptr, nullptr);
+	RImplementation.rmNormal();
+	RCache.set_CullMode(CULL_NONE);
+	RCache.set_Stencil(FALSE);
+	RCache.set_ColorWriteEnable();
+	RCache.set_Element(s_dlss_hdr->E[element]);
+	RCache.set_Geometry(g_combine);
+	RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
+	return rt_dlss_hdr_input->pSurface;
 }
 
 // Before the scene is combined: until reconstruction it is kept in floating point.
@@ -422,13 +425,15 @@ void CRenderTarget::phase_dlss_postprocess()
 	const bool postAfterUpscale = dlss_post_swapped;
 	dlss::Offset sceneJitter{dlss_post_jitter.x, dlss_post_jitter.y};
 	bool dlssOutput = dlss_post_output;
+	// HDR input with the post chain before reconstruction: only its result is converted.
+	const bool hdrResolve = !postAfterUpscale && dlss::HdrInput() && dlss::Active();
 	if (!postAfterUpscale)
 	{
 #ifdef XR_DX12_BRIDGE
 		fg::CaptureScene();
 #endif
 		sceneJitter = dlss::RasterJitter();
-		dlssOutput = dlss::Evaluate(rt_Color->pSurface, rt_ssfx_motion_vectors->pSurface);
+		dlssOutput = dlss::Evaluate(hdrResolve ? dlss_hdr_encode(2) : rt_Color->pSurface, rt_ssfx_motion_vectors->pSurface);
 		dlss::EndScene();
 	}
 	if (!dlss::Configured()) return;
@@ -458,8 +463,17 @@ void CRenderTarget::phase_dlss_postprocess()
 		!postAfterUpscale && dlssOutput ? (sharpen ? 2 : 0) : 1;
 	// The debug views read the render-size scene targets.
 	if (ps_r_upscaler_debug == 1 || ps_r_upscaler_debug == 2) dlss_post_restore();
-	RCache.set_Element(s_dlss_copy->E[element]);
-	if (element == 2) RCache.set_c("dlss_sharpening", ps_r_dlss_sharpness, 0.f, 0.f, 0.f);
+	if (hdrResolve && (element == 0 || element == 2))
+	{
+		// Undo the curve and return to display values; CAS is applied in HDR first.
+		RCache.set_Element(s_dlss_hdr->E[1]);
+		RCache.set_c("dlss_sharpening", sharpen ? ps_r_dlss_sharpness : 0.f, 0.f, 0.f, 0.f);
+	}
+	else
+	{
+		RCache.set_Element(s_dlss_copy->E[element]);
+		if (element == 2) RCache.set_c("dlss_sharpening", ps_r_dlss_sharpness, 0.f, 0.f, 0.f);
+	}
 	RCache.set_Geometry(g_combine);
 	RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
 	dlss_post_restore();
