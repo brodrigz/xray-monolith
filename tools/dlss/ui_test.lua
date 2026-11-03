@@ -4,15 +4,22 @@ local command_tokens = {
     r_fsr3_quality = {"native_aa", "quality", "balanced", "performance", "ultra_performance"},
     r_dlss_quality = {"off", "dlaa", "quality", "balanced", "performance", "ultra_performance"},
     r_dlss_preset = {"default", "j", "k", "l", "m"},
+    r_upscaler_sunshafts = {"upscaled", "smoothed", "raw"},
 }
 local live = {r_upscaler = "dlss", r_dlss_quality = "quality", r_fsr3_quality = "balanced",
-    r_dlss_preset = "k", r_dlss_sharpness = 0.35}
+    r_dlss_preset = "k", r_dlss_sharpness = 0.35, r_upscaler_post_after = "1",
+    r_upscaler_sunshafts = "smoothed", r_upscaler_particles_after = "1", r_dlss_hdr_input = "1",
+    r2_sunshafts_mode = "screen_space"}
+local SWITCHES = "upscaler_post_after,upscaler_sunshafts,upscaler_particles_after"
 local pending, backup, writes = {}, {}, 0
 local coded, base_calls, renders = 0, 0, 0
 function get_console()
-    return {get_token_list = function(_, name) return command_tokens[name] end}
+    return {get_token_list = function(_, name) return command_tokens[name] or {} end}
 end
-function get_console_cmd(_, command) return live[command] end
+function get_console_cmd(kind, command)
+    if kind == 1 then return live[command] == "1" end
+    return live[command]
+end
 function exec_console_cmd(command)
     local key, value = command:match("^(%S+) (.+)$")
     assert(key and live[key] ~= nil, command)
@@ -23,7 +30,8 @@ ui_options = {UIOptions = {}}
 local class = ui_options.UIOptions
 function class:GetOption(id)
     local opt = id:match("[^/]+$")
-    for _, row in ipairs(ui_options.options[1].gr[1].gr) do
+    local page = id:find("/advanced/", 1, true) and 2 or 1
+    for _, row in ipairs(ui_options.options[1].gr[page].gr) do
         if row.id == opt then return row end
     end
     return {}
@@ -52,6 +60,10 @@ function class:On_Accept()
     for id, value in pairs(pending) do
         local row = self:GetOption(id)
         assert(row.cmd, id)
+        if type(value) == "boolean" then
+            assert(row.bool_to_num, id)
+            value = value and "1" or "0"
+        end
         exec_console_cmd(row.cmd .. " " .. tostring(value))
     end
     pending, backup = {}, {}
@@ -90,6 +102,8 @@ ui_options.init_opt_base = function()
     base_calls = base_calls + 1
     ui_options.options = {{id = "video", gr = {{id = "basic", gr = {
         {id = "renderer"}, {id = "resolution"}, {id = "fov"},
+    }}, {id = "advanced", gr = {
+        {id = "sunshafts_mode", val = 0, cmd = "r2_sunshafts_mode"},
     }}}}}
     ui_options.init_opt_coder()
 end
@@ -105,9 +119,9 @@ local function open()
     menu:Reset_opt(menu.last_curr_tree, menu.last_path)
 end
 local function expect(ids)
-    assert(table.concat(menu.visible, ",") == "renderer,resolution," .. ids .. ",fov",
+    assert(table.concat(menu.visible, ",") == "renderer,resolution,fov,line,title," .. ids,
         table.concat(menu.visible, ","))
-    assert(#ui_options.options[1].gr[1].gr == 8, "Filtering mutated canonical tree")
+    assert(#ui_options.options[1].gr[1].gr == 13, "Filtering mutated canonical tree")
 end
 local function change(opt, value)
     local row = menu:GetOption("video/basic/" .. opt)
@@ -125,7 +139,7 @@ local function discard()
     open()
 end
 open()
-expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
 local quality = menu:GetOption("video/basic/dlss_mode")
 assert(#quality.content == 5 and quality.content[1][1] == "dlaa")
 for _, entry in ipairs(quality.content) do assert(entry[1] ~= "off") end
@@ -138,12 +152,12 @@ assert(sharp.min == 0 and sharp.max == 1 and sharp.step == 0.05 and not sharp.vi
 change("dlss_mode", "performance")
 change("dlss_preset", "m")
 select_method("fsr3")
-expect("upscaler,fsr3_mode,dlss_sharpness")
+expect("upscaler,fsr3_mode,dlss_sharpness," .. SWITCHES)
 assert(menu.values.fsr3_mode == "balanced")
 change("fsr3_mode", "ultra_performance")
 change("dlss_sharpness", 0.5)
 select_method("dlss")
-expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
 assert(menu.values.dlss_mode == "performance" and menu.values.dlss_preset == "m")
 select_method("fsr3")
 assert(menu.values.fsr3_mode == "ultra_performance" and menu.values.dlss_sharpness == 0.5)
@@ -151,21 +165,21 @@ select_method("off")
 expect("upscaler")
 assert(writes == 0, "Selection wrote to live console before Apply")
 discard()
-expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
 assert(menu.values.dlss_mode == "quality" and menu.values.dlss_preset == "k" and writes == 0)
 select_method("fsr3")
 change("fsr3_mode", "native_aa")
 menu:On_Accept()
 assert(live.r_upscaler == "fsr3" and live.r_fsr3_quality == "native_aa")
 open()
-expect("upscaler,fsr3_mode,dlss_sharpness")
+expect("upscaler,fsr3_mode,dlss_sharpness," .. SWITCHES)
 -- Legacy config: DLSS selected, but disabled via quality=off.
 live.r_upscaler, live.r_dlss_quality = "dlss", "off"
 open()
 expect("upscaler")
 local before = writes
 select_method("dlss")
-expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
 assert(menu.values.dlss_mode == "quality" and live.r_dlss_quality == "off" and writes == before)
 discard()
 expect("upscaler")
@@ -191,15 +205,71 @@ env.on_xml_read()
 assert(base_calls == 1 and coded == 1)
 ui_options.init_opt_base()
 open()
-expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
 assert(base_calls == 2 and coded == 2)
 ui_options.init_opt_coder()
-assert(#ui_options.options[1].gr[1].gr == 8 and coded == 3)
+assert(#ui_options.options[1].gr[1].gr == 13 and coded == 3)
+-- The section: switches follow the upscaler and the post chain; HDR input stays console-only.
+assert(not menu:GetOption("video/basic/dlss_linear_input").id)
+assert(menu:GetOption("video/basic/title").text == "ui_mm_header_upscaling")
+assert(menu:GetOption("video/basic/upscaler_post_after").vid)
+assert(not menu:GetOption("video/basic/upscaler_particles_after").vid)
+local function toggle_post_after(value)
+    local old_renders = renders
+    change("upscaler_post_after", value)
+    assert(renders == old_renders, "Destroyed controls inside selection callback")
+    menu:Update()
+    assert(renders == old_renders + 1)
+end
+live.r_upscaler, live.r_dlss_quality = "dlss", "quality"
+open()
+toggle_post_after(false)
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness,upscaler_post_after")
+assert(live.r_upscaler_post_after == "1", "Toggle wrote to live console before Apply")
+menu:On_Accept()
+assert(live.r_upscaler_post_after == "0")
+open()
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness,upscaler_post_after")
+toggle_post_after(true)
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
+menu:On_Accept()
+assert(live.r_upscaler_post_after == "1")
+-- Sunshaft handling follows the sunshaft type, including its pending value on the Advanced page.
+local function set_sunshaft_type(kind)
+    menu:CacheValue("video/advanced", "sunshafts_mode", kind, menu:GetOption("video/advanced/sunshafts_mode"))
+    open()
+end
+local function handling_values()
+    local values = {}
+    for _, entry in ipairs(menu:GetOption("video/basic/upscaler_sunshafts").content) do
+        values[#values + 1] = entry[1]
+    end
+    return table.concat(values, ",")
+end
+open()
+assert(handling_values() == "upscaled,smoothed,raw" and menu.values.upscaler_sunshafts == "smoothed")
+set_sunshaft_type("off")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness,upscaler_post_after,upscaler_particles_after")
+set_sunshaft_type("volumetric")
+expect("upscaler,dlss_mode,dlss_preset,dlss_sharpness," .. SWITCHES)
+assert(handling_values() == "upscaled,raw" and menu.values.upscaler_sunshafts == "raw")
+assert(live.r_upscaler_sunshafts == "smoothed", "Showing Raw wrote to the live console")
+discard()
+assert(handling_values() == "upscaled,smoothed,raw" and menu.values.upscaler_sunshafts == "smoothed")
+change("upscaler_sunshafts", "upscaled")
+menu:On_Accept()
+assert(live.r_upscaler_sunshafts == "upscaled")
+change("upscaler_sunshafts", "smoothed")
+menu:On_Accept()
+assert(live.r_upscaler_sunshafts == "smoothed")
+open()
 -- Older DLSS-only binary keeps the old controls, including quality=off.
 command_tokens.r_upscaler, command_tokens.r_fsr3_quality = nil, nil
+command_tokens.r_upscaler_sunshafts = nil
+live.r_upscaler_post_after, live.r_upscaler_particles_after = nil, nil
 ui_options.init_opt_base()
 open()
-assert(table.concat(menu.visible, ",") == "renderer,resolution,dlss_mode,dlss_preset,dlss_sharpness,fov")
+assert(table.concat(menu.visible, ",") == "renderer,resolution,fov,line,title,dlss_mode,dlss_preset,dlss_sharpness")
 assert(menu:GetOption("video/basic/dlss_mode").content[1][1] == "off")
 command_tokens = {}
 ui_options.init_opt_base()
