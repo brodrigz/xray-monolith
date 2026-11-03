@@ -21,6 +21,7 @@ u32 ps_r_dlss_preset = 0;
 float ps_r_dlss_sharpness = 0.0f;
 int ps_r_upscaler_debug = 0;
 int ps_r_upscaler_post_after = 1;
+int ps_r_upscaler_particles_after = 1;
 int ps_r_upscaler_sunshaft_smooth = 1;
 int ps_r_dlss_hdr_input = 1;
 xr_token dlss_preset_token[] = {
@@ -1661,6 +1662,8 @@ void xrRender_initconsole()
 	CMD4(CCC_Float, "r_dlss_sharpness", &ps_r_dlss_sharpness, 0.0f, 1.0f);
 	// Post chain, volumetric lights, particles and laser beams after the upscaler; needs vid_restart
 	CMD4(CCC_Integer, "r_upscaler_post_after", &ps_r_upscaler_post_after, 0, 1);
+	// 0 = particles stay before the upscaler while the rest stays after: cheaper, but they smear again
+	CMD4(CCC_Integer, "r_upscaler_particles_after", &ps_r_upscaler_particles_after, 0, 1);
 	// Linear HDR input for DLSS, with a reversible curve around it; needs r_upscaler_post_after and vid_restart
 	CMD4(CCC_Integer, "r_dlss_hdr_input", &ps_r_dlss_hdr_input, 0, 1);
 	// 1 = upscaler input (render resolution, stretched), 2 = motion vectors

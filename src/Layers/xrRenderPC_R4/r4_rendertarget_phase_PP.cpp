@@ -374,7 +374,8 @@ void CRenderTarget::dlss_post_effects()
 	if (graph.mapDlssEffects.empty() && graph.mapDlssHudEffects.empty()) return;
 	if (!reported_post_effects)
 	{
-		Msg("[Upscaler] Particles and laser beams drawn after reconstruction: native=%ux%u, scene=%ux%u",
+		Msg("[Upscaler] %s drawn after reconstruction: native=%ux%u, scene=%ux%u",
+			ps_r_upscaler_particles_after ? "Particles and laser beams" : "Laser beams",
 			Device.dwWidth, Device.dwHeight, dlss::RenderWidth(), dlss::RenderHeight());
 		reported_post_effects = true;
 	}

@@ -244,8 +244,8 @@ void CDSGraphManager::r_dsgraph_insert_dynamic(dxRender_Visual *pVisual, Fmatrix
 	// scene behind them; the upscaler accumulated them into grids. With the post
 	// chain after reconstruction, draw them at display resolution with it.
 	// Opaque particles (priority 0) stay in the G-buffer.
-	if (shader_priority == 1 && this == &RImplementation.GMBase && pVisual->dcast_ParticleCustom() &&
-		RImplementation.Target->DlssPostAfterUpscale())
+	if (ps_r_upscaler_particles_after && shader_priority == 1 && this == &RImplementation.GMBase &&
+		pVisual->dcast_ParticleCustom() && RImplementation.Target->DlssPostAfterUpscale())
 	{
 		RGraph.mapDlssEffects.emplace_back(distSQ, SSA, val_pObject, pVisual, xform, sh, false);
 		return;
