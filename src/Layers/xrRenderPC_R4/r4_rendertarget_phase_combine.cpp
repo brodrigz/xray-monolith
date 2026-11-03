@@ -449,9 +449,13 @@ void CRenderTarget::phase_combine()
 	//	combine light volume here
 	const bool volumetric = RImplementation.o.ssfx_volumetric ?
 		m_bHasActiveVolumetric || m_bHasActiveVolumetric_spot : m_bHasActiveVolumetric;
-	// With the post chain after reconstruction, the volumetric lights are added after it too
+	// With the post chain after reconstruction, the volumetric lights are added after it too,
+	// unless sunshafts are set to go through the upscaler.
 	const bool postAfterUpscale = DlssPostAfterUpscale();
-	if (volumetric && !postAfterUpscale)
+	const bool sunshaftsBeforeUpscale = postAfterUpscale && ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_UPSCALED;
+	const bool screenSpaceSunshafts = !_menu_pp &&
+		(ps_sunshafts_mode == R2SS_SCREEN_SPACE || ps_sunshafts_mode == R2SS_COMBINE_SUNSHAFTS);
+	if (volumetric && (!postAfterUpscale || sunshaftsBeforeUpscale))
 		phase_combine_volumetric();
 
 	// Perform blooming filter and distortion if needed
@@ -522,23 +526,26 @@ void CRenderTarget::phase_combine()
 		// Only scene passes read the previous positions: keep them render-sized.
 		if (ssfx_PrevPos_Requiered)
 			HW.pContext->CopyResource(rt_ssfx_prevPos->pTexture->surface_get(), rt_Position->pTexture->surface_get());
+		// First in the post chain, so they can stay in the scene while the rest moves.
+		if (sunshaftsBeforeUpscale && screenSpaceSunshafts)
+		{
+			PIX_EVENT(phase_sunshafts);
+			phase_sunshafts();
+		}
 		dlss_post_upscale();
 		dlss_post_effects();
 		// Beams and the volumetric sun change on their own but carry the motion
 		// of the scene behind them; in the upscaler's history they became grids.
 		// A distortion mask now fills rt_Generic_1; it used to overwrite their
 		// bloom overflow there, so skip that output.
-		if (volumetric)
+		if (volumetric && !sunshaftsBeforeUpscale)
 			phase_combine_volumetric(!bDistort);
 	}
 
-	if (!_menu_pp)
+	if (screenSpaceSunshafts && !sunshaftsBeforeUpscale)
 	{
-		if (ps_sunshafts_mode == R2SS_SCREEN_SPACE || ps_sunshafts_mode == R2SS_COMBINE_SUNSHAFTS)
-		{
-			PIX_EVENT(phase_sunshafts);
-			phase_sunshafts();
-		}
+		PIX_EVENT(phase_sunshafts);
+		phase_sunshafts();
 	}
 
 	if (RImplementation.o.ssfx_fog && ps_ssfx_fog_scattering > 0)

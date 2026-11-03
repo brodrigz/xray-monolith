@@ -1514,8 +1514,9 @@ CRenderTarget::CRenderTarget()
 				s_dlss_hdr.create(&hdr, "dlss_hdr");
 				rt_dlss_hdr_input.create("$user$dlss_hdr_input", rt_Generic_0->dwWidth, rt_Generic_0->dwHeight,
 					D3DFMT_A16B16G16R16F);
-				// The water/glass copy must match the scene's format to stay valid.
-				for (ref_rt* rt : {&rt_Generic_0, &rt_Generic_temp})
+				// The water/glass copy must match the scene's format to stay valid, and so
+				// must rt_Generic: sunshafts before the upscaler copy their blend back from it.
+				for (ref_rt* rt : {&rt_Generic_0, &rt_Generic_temp, &rt_Generic})
 				{
 					string64 name;
 					xr_sprintf(name, "$user$dlss_hdr_%u", u32(dlss_hdr_twins.size()));

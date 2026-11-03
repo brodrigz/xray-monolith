@@ -391,7 +391,8 @@ void CRenderTarget::dlss_post_effects()
 
 bool CRenderTarget::DlssSunshaftMaskOverTime() const
 {
-	return dlss_post_swapped && s_dlss_sunshaft_mask._get() != nullptr && ps_r_upscaler_sunshaft_smooth;
+	return dlss_post_swapped && s_dlss_sunshaft_mask._get() != nullptr &&
+		ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_SMOOTHED;
 }
 
 // This frame's mask is in rt_sunshafts_1; the blurs read the result from rt_sunshafts_0.
