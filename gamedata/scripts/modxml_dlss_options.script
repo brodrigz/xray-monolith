@@ -265,6 +265,11 @@ local function add_options()
                         cmd = "r_dlss_preset", content = presets, vid = true,
                         upscaler_method = dual and "dlss" or nil,
                     })
+                    if has_switch("r_dlss_hdr_input") then
+                        add(switch_row("dlss_linear_input", "r_dlss_hdr_input", {
+                            vid = true, upscaler_method = dual and "dlss" or nil,
+                        }))
+                    end
                     add({
                         id = "dlss_sharpness", type = "track", val = 2,
                         cmd = "r_dlss_sharpness", min = 0, max = 1, step = 0.05,
@@ -279,8 +284,6 @@ local function add_options()
                             upscaler_method = dual and "either" or nil,
                         })
                     end
-                    -- r_dlss_hdr_input has no row on purpose: players with SDR monitors
-                    -- would turn it off thinking it is for HDR displays.
                     if has_switch("r_upscaler_post_after") then
                         add(switch_row("upscaler_post_after", "r_upscaler_post_after", {
                             vid = true, upscaler_method = dual and "either" or nil,
