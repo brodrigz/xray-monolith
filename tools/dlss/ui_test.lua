@@ -8,7 +8,7 @@ local command_tokens = {
 }
 local live = {r_upscaler = "dlss", r_dlss_quality = "quality", r_fsr3_quality = "balanced",
     r_dlss_preset = "k", r_dlss_sharpness = 0.35, r_upscaler_post_after = "1",
-    r_upscaler_sunshafts = "smoothed", r_upscaler_particles_after = "1", r_dlss_hdr_input = "1",
+    r_upscaler_sunshafts = "smoothed", r_upscaler_particles_after = "0", r_dlss_hdr_input = "1",
     r2_sunshafts_mode = "screen_space"}
 local SWITCHES = "upscaler_post_after,upscaler_sunshafts,upscaler_particles_after"
 local pending, backup, writes = {}, {}, 0
