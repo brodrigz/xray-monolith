@@ -1666,7 +1666,8 @@ void xrRender_initconsole()
 	CMD3(CCC_Token, "r_fsr3_quality", &ps_r_fsr3_quality, fsr3_quality_token);
 	CMD3(CCC_Token, "r_dlss_preset", &ps_r_dlss_preset, dlss_preset_token);
 	CMD4(CCC_Float, "r_dlss_sharpness", &ps_r_dlss_sharpness, 0.0f, 1.0f);
-	// Post chain, volumetric lights, particles and laser beams after the upscaler; needs vid_restart
+	// Post chain, volumetric lights and particles after the upscaler; needs vid_restart.
+	// Laser beams are drawn after it either way.
 	CMD4(CCC_Integer, "r_upscaler_post_after", &ps_r_upscaler_post_after, 0, 1);
 	// 1 = particles are drawn after the upscaler too, along with the rest of the post chain
 	CMD4(CCC_Integer, "r_upscaler_particles_after", &ps_r_upscaler_particles_after, 0, 1);

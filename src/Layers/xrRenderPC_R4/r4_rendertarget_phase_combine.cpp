@@ -533,7 +533,7 @@ void CRenderTarget::phase_combine()
 			phase_sunshafts();
 		}
 		dlss_post_upscale();
-		dlss_post_effects();
+		dlss_post_effects(dlss_post_jitter.x, dlss_post_jitter.y);
 		// Beams and the volumetric sun change on their own but carry the motion
 		// of the scene behind them; in the upscaler's history they became grids.
 		// A distortion mask now fills rt_Generic_1; it used to overwrite their

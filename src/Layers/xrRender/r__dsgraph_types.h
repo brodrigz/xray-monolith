@@ -255,7 +255,7 @@ namespace R_dsgraph
 		bool hasNativeHudAttachments = false;
 		mapDSGraphItems<float, true> mapScopeHUDSorted;
 		mapDSGraphItems<float, false> mapScopeHUD;
-		// Particles and laser beams drawn after the upscaler, with the post chain.
+		// Laser beams, and particles with the post chain, drawn after the upscaler.
 		mapDSGraphItems<float, true> mapDlssEffects;
 		mapDSGraphItems<float, true> mapDlssHudEffects;
 #endif

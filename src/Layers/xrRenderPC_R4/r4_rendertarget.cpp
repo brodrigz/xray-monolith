@@ -1474,7 +1474,7 @@ CRenderTarget::CRenderTarget()
 		}
 		if (!ps_r_upscaler_post_after)
 		{
-			Msg("[Upscaler] r_upscaler_post_after is off: post-processing, volumetric lights, particles and laser beams stay before reconstruction");
+			Msg("[Upscaler] r_upscaler_post_after is off: post-processing, volumetric lights and particles stay before reconstruction");
 		}
 		else if (s_dlss_display_copy && !RImplementation.o.dx10_msaa)
 		{

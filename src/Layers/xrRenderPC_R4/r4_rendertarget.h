@@ -365,11 +365,11 @@ public:
 	ref_shader s_dlss_postprocess;
 	ref_shader s_dlss_copy;
 	ref_shader s_dlss_ui_depth;
-	// 3D shader scope lenses drawn after reconstruction; null without the copy shader.
-	// The display-resolution targets are created on the first scoped frame.
+	// 3D shader scope lenses and laser beams drawn after reconstruction; null without
+	// the copy shader. The display-resolution targets are created on first use.
 	ref_shader s_dlss_display_copy;
 	ref_rt rt_dlss_scope_color;
-	ref_rt rt_dlss_scope_position;
+	ref_rt rt_dlss_display_position;
 	ref_rt rt_dlss_scope_heat;
 	ref_texture t_dlss_scene_depth;
 	bool reported_native_ui = false; // One diagnostic per target lifetime.
@@ -474,6 +474,7 @@ public:
 	bool ScopeAfterUpscale() const;
 	void phase_dlss_native_depth(float jitterX, float jitterY, bool lens = false);
 	void phase_dlss_scope(float jitterX, float jitterY);
+	void dlss_display_position(float jitterX, float jitterY);
 	void phase_lut();
 	void phase_smaa();
 	void phase_scene_prepare();
@@ -551,9 +552,11 @@ public:
 	void phase_dlss_postprocess();
 	void dlss_post_twin(ref_rt& scene, float divisor = 1.f, int resample = -1);
 	bool DlssPostAfterUpscale() const;
+	bool DlssEffectsAfterUpscale() const;
 	void dlss_post_upscale();
+	void dlss_post_swap();
 	void dlss_post_restore();
-	void dlss_post_effects();
+	void dlss_post_effects(float jitterX, float jitterY);
 	bool DlssSunshaftMaskOverTime() const;
 	void dlss_sunshaft_mask(u32 Offset);
 	void dlss_hdr_begin();
