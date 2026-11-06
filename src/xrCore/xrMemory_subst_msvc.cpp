@@ -201,6 +201,16 @@ void* xrMemory::mem_realloc(void* P, size_t size
 #ifdef PURE_MEMORY_FILL_ZERO
 		if (result && size > old_size)
 			memset((u8*)result + old_size, 0, size - old_size);
+		else if (result)
+		{
+			// A small block can shrink in place while _aligned_msize keeps reporting the
+			// old size, so a later growth would zero only past that and return the dropped
+			// bytes unchanged. Clear whatever the heap still counts beyond the new size;
+			// larger blocks report their new size and cost nothing here.
+			const size_t kept = _aligned_msize(result, PURE_MEMORY_ALIGNMENT, 0);
+			if (kept > size)
+				memset((u8*)result + size, 0, kept - size);
+		}
 #endif // PURE_MEMORY_FILL_ZERO
 
 # ifdef USE_MEMORY_MONITOR
