@@ -1,12 +1,14 @@
-# FSR frame generation: laser and reticle afterimages
+# Frame generation: laser and reticle afterimages
 
 Status: planned, nothing built. Decided on 2026-11-02 to do this after the 0.71 package.
 
 ## The problem
 
-With FSR frame generation on, fast camera moves make two dim dots orbit a laser dot or red dot reticle. DLSS-G and frame generation off are clean, whichever upscaler is active.
+With frame generation on, fast camera moves make two dim dots orbit a laser dot or red dot reticle, whichever upscaler is active. FSR frame generation shows it most. DLSS-G has it too but hides it a little better. Frame generation off is clean.
 
 ## Cause, from AMD's source
+
+This section only explains FSR. DLSS-G is closed source, so a similar cause there is an assumption.
 
 - `ffx_frameinterpolation.h:102` samples the previous frame at `+motion` and the current frame at `-motion`, then blends them 50/50. Background pixels that land on the dot pick up its color, one copy from each frame at half strength. That matches the two dim dots.
 - With a hudless image attached, those source frames are the hudless copies.
@@ -26,15 +28,17 @@ The source in `sdk/FSR3` is the vendored tree (its README says 3.1.2). The runti
 
 AMD documents three ways to handle UI, and none mention lasers or reticles. It warns that the hudless method can leave minor artifacts on semi-transparent elements.
 
+These verdicts come from AMD's source, so they may not hold for DLSS-G. Real motion vectors in particular could behave differently there.
+
 ## Plan
 
-1. **Rectangle test.** Add a dev toggle that fills a fixed rectangle at screen center in the hudless copy, with no mask. Point the laser into it during fast turns. Continue only if the ghosts inside it disappear and the real dot stays.
+1. **Rectangle test.** Add a dev toggle that fills a fixed rectangle at screen center in the hudless copy, with no mask. Point the laser into it during fast turns, on FSR frame generation and on DLSS-G. Continue for a runtime only if the ghosts inside it disappear and the real dot stays. This is the first evidence of how DLSS-G responds.
 2. **Mask.** Add a display-size color target and redraw only the lasers and reticles into it, filtered by pixel shader name (`models_laserbeam`, `models_reflex_reticle`). Glass, particles and lens contents stay out. It needs a color target rather than a single channel, so green lasers register too.
    - Lasers: redraw next to `dlss_post_effects`. `mapDlssEffects` also holds particles, so filter it.
    - Reticles: redraw next to `render_Reticle` in `phase_dlss_scope`. `mapScopeHUDSorted` also holds lenses, so filter it.
    - `r_dsgraph_render_graph_sorted` clears its list by default, so the mask draw must pass `_clear = false` or copy the items.
    - Some reticle shaders mark stencil 254 and cutouts test it, so check that the extra draw doesn't disturb that.
-3. **Fill.** Just before `fg::CaptureHudless` in `phase_combine`, copy the frame, fill masked pixels from nearby unmasked ones, and give that image to `D3D12PresentBridge::CaptureHudless` instead of `shared11`. Only for `PresentRuntime::Fsr`, so DLSS-G is unchanged. Skip everything on frames with no laser or reticle.
+3. **Fill.** Just before `fg::CaptureHudless` in `phase_combine`, copy the frame, fill masked pixels from nearby unmasked ones, and give that image to `D3D12PresentBridge::CaptureHudless` instead of `shared11`. FSR and DLSS-G both read this capture (`inputs12[2]`), so one fill can serve both. Enable it only for the runtimes that passed step 1. Skip everything on frames with no laser or reticle.
 4. **Checks.** Add a console toggle for comparing and a mask debug view. Test lasers on the weapon and on NPCs, 3D scope reticles, gas mask and night vision.
 
 ## Cost
@@ -42,7 +46,7 @@ AMD documents three ways to handle UI, and none mention lasers or reticles. It w
 Estimates, not measurements:
 
 - GPU: two small redraws, a frame copy and one fill pass, skipped on frames with no laser or reticle.
-- VRAM: two display-size 8-bit targets, about 30 MB at 1440p, allocated only with FSR frame generation on.
+- VRAM: two display-size 8-bit targets, about 30 MB at 1440p, allocated only with frame generation on.
 
 ## Known limits
 
