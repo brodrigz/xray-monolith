@@ -565,7 +565,7 @@ HRESULT D3D12PresentBridge::SubmitFrame()
     if (!m_acquired || m_submitted) return Check(E_UNEXPECTED, "Acquire/render/submit/present order");
     bool generate = NeedsFGInputs() && m_sceneValid && m_hudlessValid;
     const bool streamline = m_runtimeKind == PresentRuntime::Streamline && m_streamline.IsReady();
-    if (streamline && !m_streamline.SetEnabled(generate))
+    if (streamline && !m_streamline.SetEnabled(generate, m_framesToGenerate))
     {
         // Turn FG off and keep presenting; fatal only if DLSS-G cannot be disabled.
         BRIDGE_CHECK(FailGeneration("DLSS-G on/off switch"));
@@ -660,9 +660,10 @@ HRESULT D3D12PresentBridge::SubmitFrame()
     return S_OK;
 }
 
-HRESULT D3D12PresentBridge::BeginFrame(UINT frameLimitUs, bool allowGeneration)
+HRESULT D3D12PresentBridge::BeginFrame(UINT frameLimitUs, bool allowGeneration, UINT framesToGenerate)
 {
     m_allowGeneration = allowGeneration;
+    m_framesToGenerate = framesToGenerate;
     m_sceneValid = m_hudlessValid = m_depthValid = false;
     if (m_runtimeKind != PresentRuntime::Streamline || !m_streamline.IsReady() || m_fgFailed) return S_OK;
     return m_streamline.BeginFrame(frameLimitUs) ? S_OK : FailGeneration("Begin Reflex frame");

@@ -1297,7 +1297,9 @@ void CCC_Register()
 
 	CMD1(CCC_HideConsole, "hide");
 
-	CMD4(CCC_Integer, "r__framelimit", &ps_framelimiter, 0, 500);
+	// Up to 2000: with frame generation the cap counts displayed frames, so 500 at 4x
+	// would leave 125 rendered frames.
+	CMD4(CCC_Integer, "r__framelimit", &ps_framelimiter, 0, 2000);
 	CMD3(CCC_Mask, "rs_refresh_60hz", &psDeviceFlags, rsRefresh60hz);
 	CMD2(CCC_Color, "g_crosshair_color", &g_crosshair_color);
 	CMD4(CCC_Float, "mouse_sens_aim", &g_AimLookFactor, 0.01f, 5.0f);

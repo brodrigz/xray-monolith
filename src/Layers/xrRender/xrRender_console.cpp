@@ -146,7 +146,9 @@ xr_token screenshot_mode_token [ ] = {
 // Method switches between DLSS and FSR rebuild DX12 presentation on vid_restart.
 u32 ps_r_frame_generation = 0;
 int ps_r_fg_diagnostics = 0; // Latched at bridge creation.
-static xr_token frame_generation_token[] = {{"off",0},{"dlss",1},{"fsr",2},{nullptr,0}};
+// dlss3x/dlss4x ask DLSS-G for 2/3 generated frames, clamped to what the runtime allows.
+// Their ids follow fsr so saved configs keep their meaning.
+static xr_token frame_generation_token[] = {{"off",0},{"dlss",1},{"dlss3x",3},{"dlss4x",4},{"fsr",2},{nullptr,0}};
 // DX12-only: AMD FSR through the bridge (FSR 4 on supported Radeon GPUs).
 static xr_token upscaler_token_dx12[] = {{"off", 0}, {"dlss", 1}, {"fsr3", 2}, {"fsr4", 3}, {nullptr, 0}};
 #endif

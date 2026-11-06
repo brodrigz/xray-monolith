@@ -76,9 +76,13 @@ public:
     bool FrameGenerationReady() const;
     // The last presented frame was submitted with generation enabled.
     bool GenerationActive() const { return m_lastGenerated; }
+    // Displayed frames per rendered frame while generating: 2 for FSR, 2-4 for DLSS-G.
+    UINT GenerationMultiplier() const
+    { return m_runtimeKind == PresentRuntime::Streamline ? m_streamline.FramesToGenerate() + 1 : 2; }
     bool VSyncBlocksGeneration() const { return m_vsyncBlocked; }
     StreamlineIntegration* GetStreamline() { return m_streamline.IsReady() ? &m_streamline : nullptr; }
-    HRESULT BeginFrame(UINT frameLimitUs, bool allowGeneration);
+    // framesToGenerate: DLSS-G frames per rendered frame (1 = 2x); FSR always generates one.
+    HRESULT BeginFrame(UINT frameLimitUs, bool allowGeneration, UINT framesToGenerate = 1);
     HRESULT CaptureScene(ID3D11Resource* depth, ID3D11Resource* motion, const FrameGenerationInputs& inputs);
     HRESULT CaptureHudless(bool valid);
     bool NeedsFGInputs() const;
@@ -225,6 +229,7 @@ private:
     UINT64 m_diagnosticFrame{};
     FrameGenerationInputs m_inputs{};
     bool m_allowGeneration{}, m_sceneValid{}, m_hudlessValid{}, m_resetHistory{true};
+    UINT m_framesToGenerate{1};
     ComPtr<ID3D12Resource> m_depthExport12;
     UINT64 m_depthExportGeneration{};
     bool m_depthExportWanted{}, m_depthValid{}, m_depthExportFailed{};

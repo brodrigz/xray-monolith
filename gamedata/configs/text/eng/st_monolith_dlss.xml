@@ -31,9 +31,13 @@
     <string id="ui_mm_lst_dlss_l"><text>L</text></string>
     <string id="ui_mm_lst_dlss_m"><text>M</text></string>
     <string id="ui_mm_video_basic_frame_generation"><text>Frame generation (experimental)</text></string>
-    <string id="ui_mm_video_basic_frame_generation_desc"><text>Adds one generated frame per rendered frame. Only methods supported by this GPU are listed. DLSS 2x requires an NVIDIA RTX 40/50 GPU, hardware-accelerated GPU scheduling and the supplied Streamline runtime. AMD FSR 2x works on any DX12 GPU (FSR 4 frame generation on Radeon RX 9000 with Windows 11, otherwise FSR 3.1); it has no Reflex, and after using it, DLSS 2x and Reflex need a game restart. Requires an upscaler and MSAA off. Pauses in menus and loading screens. With frame generation active the FPS limit applies to displayed frames. Apply restarts the renderer.</text></string>
+    <string id="ui_mm_video_basic_frame_generation_desc"><text>Adds generated frames between rendered frames: one for 2x, two for 3x, three for 4x. Only methods supported by this GPU are listed. DLSS 3x and 4x need an RTX 50 GPU, or a frame generation unlock on older RTX GPUs; otherwise they run as 2x. DLSS 2x requires an NVIDIA RTX 40/50 GPU, hardware-accelerated GPU scheduling and the supplied Streamline runtime. AMD FSR 2x works on any DX12 GPU (FSR 4 frame generation on Radeon RX 9000 with Windows 11, otherwise FSR 3.1); it has no Reflex, and after using it, DLSS 2x and Reflex need a game restart. Requires an upscaler and MSAA off. Pauses in menus and loading screens. With frame generation active the FPS limit applies to displayed frames. Apply restarts the renderer.</text></string>
     <string id="ui_mm_lst_fg_dlss_2x"><text>DLSS 2x</text></string>
     <string id="ui_mm_lst_fg_dlss_2x_restart"><text>DLSS 2x (restart the game)</text></string>
+    <string id="ui_mm_lst_fg_dlss_3x"><text>DLSS 3x</text></string>
+    <string id="ui_mm_lst_fg_dlss_3x_restart"><text>DLSS 3x (restart the game)</text></string>
+    <string id="ui_mm_lst_fg_dlss_4x"><text>DLSS 4x</text></string>
+    <string id="ui_mm_lst_fg_dlss_4x_restart"><text>DLSS 4x (restart the game)</text></string>
     <string id="ui_mm_lst_fg_fsr_2x"><text>AMD FSR 3.1 2x</text></string>
     <string id="ui_mm_lst_fg_fsr4_2x"><text>AMD FSR 4 2x</text></string>
     <string id="ui_mm_header_upscaling"><text>Upscaling</text></string>

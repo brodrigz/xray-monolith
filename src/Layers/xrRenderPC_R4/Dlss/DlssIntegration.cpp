@@ -352,6 +352,14 @@ bool FrameGenerationSupported(unsigned id)
         }
     case 2: return HW.PresentationBridge() && HW.PresentationBridge()->FsrRuntimeAvailable() &&
         *HW.PresentationBridge()->FsrFrameGenerationVersion();
+    case 3: // DLSS 3x and 4x: DLSS-G that allows 2 or 3 generated frames (RTX 50, or an MFG unlock).
+    case 4:
+    {
+        if (!FrameGenerationSupported(1)) return false;
+        // Unknown until Streamline starts; offered then, and run as 2x if the runtime says less.
+        const UINT max = StreamlineIntegration::MaxFramesToGenerate();
+        return !max || max >= id - 1;
+    }
     default: return false;
     }
 #else
