@@ -435,7 +435,42 @@ HRESULT D3D12PresentBridge::CreateSharedTexture(UINT width, UINT height, DXGI_FO
     SharedHandle handle;
     BRIDGE_CHECK(m_device12->CreateSharedHandle(texture12.Get(), nullptr, GENERIC_ALL, nullptr, &handle.value));
     BRIDGE_CHECK(m_device11->OpenSharedResource1(handle.value, IID_PPV_ARGS(&texture11)));
+    KeepResident(texture12.Get(), texture11.Get());
     return S_OK;
+}
+
+// The frame copy and the frame generation inputs are used by both devices every frame.
+// Over the VRAM budget, Windows then moves the game's textures to system memory before
+// these. High, not maximum, so other programs keep their share. Only a hint: a failure
+// leaves the default priority and presentation goes on.
+void D3D12PresentBridge::KeepResident(ID3D12Resource* texture12, ID3D11Texture2D* texture11)
+{
+    HRESULT result12 = E_NOINTERFACE;
+    ComPtr<ID3D12Device1> device1;
+    if (SUCCEEDED(m_device12.As(&device1)))
+    {
+        ID3D12Pageable* pageable = texture12;
+        const D3D12_RESIDENCY_PRIORITY priority = D3D12_RESIDENCY_PRIORITY_HIGH;
+        result12 = device1->SetResidencyPriority(1, &pageable, &priority);
+    }
+    // The DX11 device has its own view of the shared texture.
+    texture11->SetEvictionPriority(DXGI_RESOURCE_PRIORITY_HIGH);
+    const bool kept11 = texture11->GetEvictionPriority() == DXGI_RESOURCE_PRIORITY_HIGH;
+    if (!m_logger) return;
+    char message[160]{};
+    if ((FAILED(result12) || !kept11) && !m_residencyFailureLogged)
+    {
+        m_residencyFailureLogged = true;
+        snprintf(message, sizeof(message),
+            "! [DX12 bridge] Shared surface residency priority not set (DX12 0x%08lX, DX11 %s); using the default",
+            static_cast<unsigned long>(result12), kept11 ? "ok" : "ignored");
+        m_logger(message);
+    }
+    else if (SUCCEEDED(result12) && kept11 && !m_residencyLogged)
+    {
+        m_residencyLogged = true;
+        m_logger("[DX12 bridge] Shared surfaces have high residency priority on both devices");
+    }
 }
 
 HRESULT D3D12PresentBridge::CreateSurfaces()

@@ -162,6 +162,7 @@ private:
     HRESULT CreateSharedFence(ComPtr<ID3D12Fence>& fence12, ComPtr<ID3D11Fence>& fence11);
     HRESULT CreateSharedTexture(UINT width, UINT height, DXGI_FORMAT format, bool unorderedAccess,
         ComPtr<ID3D12Resource>& texture12, ComPtr<ID3D11Texture2D>& texture11);
+    void KeepResident(ID3D12Resource* texture12, ID3D11Texture2D* texture11);
     HRESULT WaitFor(ID3D12Fence* fence, UINT64 value, bool allocatorReuse = false);
     HRESULT Check(HRESULT result, const char* stage);
     // Once per bridge: fence progress and device-removed reasons after a timeout or device loss.
@@ -234,6 +235,8 @@ private:
     ComPtr<ID3D12Resource> m_depthExport12;
     UINT64 m_depthExportGeneration{};
     bool m_depthExportWanted{}, m_depthValid{}, m_depthExportFailed{};
+    // Logged once per bridge: whether the shared surfaces got their residency priority.
+    bool m_residencyLogged{}, m_residencyFailureLogged{};
     Statistics m_statistics{};
     bool m_profiling{};
     UINT64 m_generatedPresents{}, m_enabledPresents{}, m_totalPresented{}, m_markerFrames{};
