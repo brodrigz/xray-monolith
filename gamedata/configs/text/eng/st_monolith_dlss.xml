@@ -44,9 +44,10 @@
     <string id="ui_mm_video_basic_upscaler_post_after"><text>Post-processing after upscaling</text></string>
     <string id="ui_mm_video_basic_upscaler_post_after_desc"><text>Keeps post-processing effects at full resolution without upscaling, which reduces ghosting and smearing on them.\nCan cost FPS and VRAM, especially on weaker GPUs.</text></string>
     <string id="ui_mm_video_basic_upscaler_sunshafts"><text>Sunshafts</text></string>
-    <string id="ui_mm_video_basic_upscaler_sunshafts_desc"><text>Choose how sunshafts are handled on the upscaler.\nUpscaled: Upscaled normally. Most stable, but can show smearing.\nRaw: Drawn after the upscaler. Sharpest, but can shimmer or look grainy.\nSmoothed: Same as Raw, with an extra smoothing pass to reduce shimmer.</text></string>
+    <string id="ui_mm_video_basic_upscaler_sunshafts_desc"><text>Choose how sunshafts are handled on the upscaler.\nUpscaled: Upscaled normally. Most stable, but can show smearing.\nRaw: Drawn after the upscaler. Sharpest, but can shimmer or look grainy.\nSmoothed: Same as Raw, with an extra smoothing pass to reduce shimmer.\nOptimized smoothing: Same as Smoothed, with cheaper volumetric sunshafts that rely on the smoothing. Needs the compatibility patch's RC7.71 Volumetric Sunshafts option.</text></string>
     <string id="ui_mm_lst_upscaler_sunshafts_upscaled"><text>Upscaled</text></string>
     <string id="ui_mm_lst_upscaler_sunshafts_smoothed"><text>Smoothed</text></string>
+    <string id="ui_mm_lst_upscaler_sunshafts_optimized"><text>Optimized smoothing</text></string>
     <string id="ui_mm_lst_upscaler_sunshafts_raw"><text>Raw</text></string>
     <string id="ui_mm_video_basic_upscaler_particles_after"><text>Full resolution particles</text></string>
     <string id="ui_mm_video_basic_upscaler_particles_after_desc"><text>Draws smoke, fire and dust at full resolution without upscaling, which reduces visual artifacts on them.\nCan cost FPS, especially on weaker GPUs.\nThe visual difference is small with DLSS.</text></string>

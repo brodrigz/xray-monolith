@@ -57,7 +57,7 @@ def build(output: Path, version: str = VERSION) -> None:
             stage / "components/base/gamedata/shaders/r3" / name,
         )
 
-    for component in ("better_beefs", "better_beefs_atmos_rc7", *GLOSSY_PUDDLES):
+    for component in ("better_beefs", "better_beefs_atmos_rc7", "atmos_rc771_volumetric", *GLOSSY_PUDDLES):
         component_source = SOURCE / component / "gamedata"
         for source in sorted(component_source.rglob("*")):
             if source.is_file():
@@ -77,6 +77,7 @@ def build(output: Path, version: str = VERSION) -> None:
         "atmos_rc7.txt": "Selected: Atmospherics 2.69 RC7.x (RC7.5 to RC7.71).",
         "wearable.txt": "Selected: WearableDevices compatibility.",
         "better_beefs.txt": "Selected: Better Beef's NVGs (.19) compatibility.",
+        "atmos_rc771_volumetric.txt": "Selected: Atmospherics RC7.71 Volumetric Sunshafts.",
         "glossy_puddles.txt": "Selected: Glossy Puddles Overhaul v2.3 compatibility.",
     }
     for name, description in selections.items():

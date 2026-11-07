@@ -1,0 +1,64 @@
+#include "common.h"
+#include "anomaly_shaders.h"
+#include "dlss_contract.h"
+
+// Volumetric lights over time, for the post chain after reconstruction. They are
+// drawn render-sized and jittered, with noise that changes every frame, and are
+// added after the upscaler, so nothing averaged them any more: grain and flicker
+// around foliage. Same history as dlss_sunshaft_mask.ps, in colour.
+Texture2D s_current; // this frame's volumetric lights, render-sized and jittered
+Texture2D s_history; // display-sized, unjittered
+Texture2D s_motion_vectors;
+
+float4x4 m_current;
+float4x4 m_previous;
+float4 dlss_volumetric_history_params; // x = weight of this frame, yz = raster jitter in UV
+
+#define DLSS_VOLUMETRIC_SKY_DEPTH 10000.0f
+
+// Previous position in UV. The sky writes no motion vectors, so it follows the camera.
+float2 dlss_volumetric_previous(float2 tc)
+{
+    float depth = s_position.SampleLevel(smp_nofilter, tc, 0).z;
+    float2 motion;
+    [branch] if (is_not_sky(depth) > 0.5f)
+    {
+        motion = s_motion_vectors.SampleLevel(smp_nofilter, tc, 0).xy;
+    }
+    else
+    {
+        float2 pixel = tc * screen_res.xy;
+        float4 P = float4(DLSS_VOLUMETRIC_SKY_DEPTH * float3(pixel * pos_decompression_params.zw - pos_decompression_params.xy, 1.0f), 1.0f);
+        float4 current = mul(m_current, P);
+        float4 previous = mul(m_previous, P);
+        float2 camera = current.xy / current.w - previous.xy / previous.w;
+        motion = float2(camera.x, -camera.y) * 0.5f;
+    }
+    return tc - motion;
+}
+
+float4 main(float4 position : SV_Position) : SV_Target
+{
+    float2 tc = position.xy * screen_res.zw;
+    float2 current_tc = tc + dlss_volumetric_history_params.yz;
+    float4 center = s_current.SampleLevel(smp_rtlinear, current_tc, 0);
+
+    // Limits for the history from this frame's render pixels around it, so that
+    // what moved away does not stay. They span the noise, which then averages out.
+    float2 texel = rcp(dlss_params.yz);
+    float4 low = center, high = center;
+    [unroll] for (int y = -1; y <= 1; ++y)
+    {
+        [unroll] for (int x = -1; x <= 1; ++x)
+        {
+            float4 value = s_current.SampleLevel(smp_nofilter, current_tc + float2(x, y) * texel, 0);
+            low = min(low, value);
+            high = max(high, value);
+        }
+    }
+
+    float2 previous = dlss_volumetric_previous(tc);
+    bool inside = all(previous >= 0.0f) && all(previous <= 1.0f);
+    float4 history = clamp(s_history.SampleLevel(smp_rtlinear, previous, 0), low, high);
+    return inside ? lerp(history, center, dlss_volumetric_history_params.x) : center;
+}

@@ -191,6 +191,39 @@ public:
     }
 };
 
+class CBlender_dlss_volumetric_history : public IBlender
+{
+public:
+    CBlender_dlss_volumetric_history() { description.CLS = 0; }
+    LPCSTR getComment() override { return "Volumetric lights over time"; }
+    BOOL canBeDetailed() override { return FALSE; }
+    BOOL canBeLMAPped() override { return FALSE; }
+    void Compile(CBlender_Compile& C) override
+    {
+        IBlender::Compile(C);
+        // One element per history target: each reads one and writes the other.
+        if (C.iElement > 1) return;
+        C.r_Pass("stub_screen_space", "dlss_volumetric_history", FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_current", r2_RT_generic2);
+        C.r_dx10Texture("s_history", C.iElement ? "$user$dlss_volumetric_history_1" : "$user$dlss_volumetric_history_0");
+        C.r_dx10Texture("s_position", r2_RT_P);
+        C.r_dx10Texture("s_motion_vectors", r2_RT_ssfx_motion_vectors);
+        C.r_dx10Sampler("smp_nofilter");
+        C.r_dx10Sampler("smp_rtlinear");
+        C.r_End();
+    }
+};
+
+void CRenderTarget::dlss_volumetric_history_create()
+{
+	if (s_dlss_volumetric_history) return;
+	rt_dlss_volumetric_history[0].create("$user$dlss_volumetric_history_0", Device.dwWidth, Device.dwHeight, D3DFMT_A16B16G16R16F);
+	rt_dlss_volumetric_history[1].create("$user$dlss_volumetric_history_1", Device.dwWidth, Device.dwHeight, D3DFMT_A16B16G16R16F);
+	CBlender_dlss_volumetric_history volumetricHistory;
+	s_dlss_volumetric_history.create(&volumetricHistory, "dlss_volumetric_history");
+	dlss_volumetric_frame = 0;
+}
+
 void CRenderTarget::set_viewport_size(ID3DDeviceContext * dev, float w, float h)
 {
 	custom_viewport[0].Width = w;
@@ -1509,6 +1542,9 @@ CRenderTarget::CRenderTarget()
 				CBlender_dlss_sunshaft_mask sunshaftMask;
 				s_dlss_sunshaft_mask.create(&sunshaftMask, "dlss_sunshaft_mask");
 			}
+			string_path volumetricHistoryShader;
+			dlss_volumetric_history_available =
+				FS.exist(volumetricHistoryShader, "$game_shaders$", "r3\\dlss_volumetric_history", ".ps") != nullptr;
 			if (dlss::HdrInput())
 			{
 				// The water/glass copy must match the scene's format to stay valid, and so

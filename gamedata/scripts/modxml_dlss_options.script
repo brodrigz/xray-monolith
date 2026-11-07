@@ -70,19 +70,37 @@ local function sunshaft_type(menu)
     return get_console_cmd(0, "r2_sunshafts_mode")
 end
 
--- Smoothing only exists for screen-space sunshafts.
+-- Binaries that offer the optimized smoothing also smooth volumetric sunshafts;
+-- older ones only smooth screen-space sunshafts.
+local function smooths_volumetric()
+    for _, token in ipairs(get_console():get_token_list("r_upscaler_sunshafts") or {}) do
+        if token == "optimized" then return true end
+    end
+    return false
+end
+
+-- Optimized smoothing only differs from Smoothed for volumetric sunshafts.
 local function sunshaft_handling_choices(kind)
     local choices = {{"upscaled", "upscaler_sunshafts_upscaled"}}
-    if kind ~= "volumetric" then choices[2] = {"smoothed", "upscaler_sunshafts_smoothed"} end
+    if kind ~= "volumetric" or smooths_volumetric() then
+        choices[#choices + 1] = {"smoothed", "upscaler_sunshafts_smoothed"}
+    end
+    if kind ~= "screen_space" then choices[#choices + 1] = {"optimized", "upscaler_sunshafts_optimized"} end
     choices[#choices + 1] = {"raw", "upscaler_sunshafts_raw"}
     return content_for("r_upscaler_sunshafts", choices)
 end
 
-local volumetric_sunshafts = false
+local sunshaft_kind
+
+-- The shown choice that runs the same as value with this sunshaft type.
+local function shown_sunshaft_handling(value)
+    if value == "optimized" and sunshaft_kind == "screen_space" then return "smoothed" end
+    if value == "smoothed" and sunshaft_kind == "volumetric" and not smooths_volumetric() then return "raw" end
+    return value
+end
 
 local function current_sunshaft_handling()
-    local value = get_console_cmd(0, "r_upscaler_sunshafts")
-    return volumetric_sunshafts and value == "smoothed" and "raw" or value
+    return shown_sunshaft_handling(get_console_cmd(0, "r_upscaler_sunshafts"))
 end
 
 local function major(version)
@@ -130,11 +148,11 @@ local function install_dynamic_options()
         local handling = path == "video/basic" and find_row(tree, "upscaler_sunshafts")
         local sunshafts = handling and sunshaft_type(self)
         if handling then
-            volumetric_sunshafts = sunshafts == "volumetric"
+            sunshaft_kind = sunshafts
             handling.content = sunshaft_handling_choices(sunshafts)
-            if volumetric_sunshafts and self:GetCurrentValue(path, handling.id, handling) == "smoothed" then
-                self:CacheValue(path, handling.id, "raw", handling)
-            end
+            local pending = self:GetCurrentValue(path, handling.id, handling)
+            local shown = shown_sunshaft_handling(pending)
+            if shown ~= pending then self:CacheValue(path, handling.id, shown, handling) end
         end
         local visible = {}
         for key, value in pairs(tree) do visible[key] = value end

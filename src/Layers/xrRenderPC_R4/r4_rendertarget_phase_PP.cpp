@@ -447,7 +447,7 @@ void CRenderTarget::dlss_post_effects(float jitterX, float jitterY)
 bool CRenderTarget::DlssSunshaftMaskOverTime() const
 {
 	return dlss_post_swapped && s_dlss_sunshaft_mask._get() != nullptr &&
-		ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_SMOOTHED;
+		UpscalerSunshaftsSmoothed(ps_r_upscaler_sunshafts);
 }
 
 // This frame's mask is in rt_sunshafts_1; the blurs read the result from rt_sunshafts_0.
@@ -469,6 +469,57 @@ void CRenderTarget::dlss_sunshaft_mask(u32 Offset)
 	RCache.set_Geometry(g_KD);
 	RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 	dlss_sunshaft_history = next;
+}
+
+bool CRenderTarget::DlssVolumetricOverTime() const
+{
+	return dlss_post_swapped && dlss_volumetric_history_available && !RImplementation.o.dx10_msaa &&
+		UpscalerSunshaftsSmoothed(ps_r_upscaler_sunshafts);
+}
+
+// Read while the volumetric lights are drawn, before the post chain is swapped in.
+bool CRenderTarget::DlssVolumetricOptimized() const
+{
+	return ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_OPTIMIZED && DlssPostAfterUpscale() &&
+		dlss_volumetric_history_available && !RImplementation.o.dx10_msaa;
+}
+
+// Blends this frame's volumetric lights into the display-size history, unjittered,
+// and puts the result in place of rt_Generic_2 for the combine. Returns the
+// surface to put back afterwards.
+ID3DBaseTexture* CRenderTarget::dlss_volumetric_over_time(float jitterX, float jitterY)
+{
+	dlss_volumetric_history_create();
+	// A gap in the frames means stale history. Scope views skip every other frame.
+	const bool restart = !dlss_volumetric_frame || Device.dwFrame - dlss_volumetric_frame > 2;
+	dlss_volumetric_frame = Device.dwFrame;
+	const u32 next = dlss_volumetric_history ^ 1;
+
+	const float w = float(Device.dwWidth), h = float(Device.dwHeight);
+	u32 offset;
+	FVF::TL* quad = (FVF::TL*)RCache.Vertex.Lock(4, g_combine->vb_stride, offset);
+	quad[0].set(0, h, EPS_S, 1, 0xffffffff, 0, 1);
+	quad[1].set(0, 0, EPS_S, 1, 0xffffffff, 0, 0);
+	quad[2].set(w, h, EPS_S, 1, 0xffffffff, 1, 1);
+	quad[3].set(w, 0, EPS_S, 1, 0xffffffff, 1, 0);
+	RCache.Vertex.Unlock(4, g_combine->vb_stride);
+	u_setrt(rt_dlss_volumetric_history[next], nullptr, nullptr, nullptr);
+	RCache.set_CullMode(CULL_NONE);
+	RCache.set_Stencil(FALSE);
+	RCache.set_ColorWriteEnable();
+	RCache.set_Geometry(g_combine);
+	RCache.set_Element(s_dlss_volumetric_history->E[dlss_volumetric_history]);
+	RCache.set_c("dlss_volumetric_history_params", restart ? 1.f : 0.1f,
+		jitterX / float(dlss::RenderWidth()), jitterY / float(dlss::RenderHeight()), 0.f);
+	RCache.set_c("m_current", Matrix_current);
+	RCache.set_c("m_previous", Matrix_previous);
+	RCache.Render(D3DPT_TRIANGLELIST, offset, 0, 4, 0, 2);
+	dlss_volumetric_history = next;
+
+	ID3DBaseTexture* raw = rt_Generic_2->pTexture->surface_get();
+	rt_Generic_2->pTexture->surface_set(rt_dlss_volumetric_history[next]->pSurface);
+	RCache.InvalidateTextures();
+	return raw;
 }
 
 void CRenderTarget::phase_dlss_postprocess()

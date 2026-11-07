@@ -1213,11 +1213,15 @@ static class ssfx_jitter : public R_constant_setup
 }    ssfx_jitter;
 
 #if defined(USE_DX11)
+// w: volumetric lights are smoothed over time after reconstruction this frame and
+// may do less work per frame (r_upscaler_sunshafts optimized).
 static class dlss_params : public R_constant_setup
 {
     void setup(R_constant* C) override
     {
-        RCache.set_c(C, dlss::Active() ? 1.0f : 0.0f, float(dlss::RenderWidth()), float(dlss::RenderHeight()), 0.0f);
+        const bool volumetricOptimized = RImplementation.Target && RImplementation.Target->DlssVolumetricOptimized();
+        RCache.set_c(C, dlss::Active() ? 1.0f : 0.0f, float(dlss::RenderWidth()), float(dlss::RenderHeight()),
+            volumetricOptimized ? 1.0f : 0.0f);
     }
 } binder_dlss_params;
 static class dlss_temporal_jitter : public R_constant_setup

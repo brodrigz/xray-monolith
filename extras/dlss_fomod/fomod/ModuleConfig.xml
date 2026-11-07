@@ -118,6 +118,23 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
+            <plugin name="Atmospherics RC7.71 Volumetric Sunshafts">
+              <description>Select only with Atmospherics RC7.71 on page 2, if you picked
+"Volumetric Sunshafts" in its installer. Leave unchecked for "Screenspace Sunshafts".
+
+Adds what the "Optimized smoothing" sunshaft choice needs: with post-processing
+after upscaling, volumetric shafts do part of their work each frame and the
+smoothing averages the rest. Other choices keep RC7.71's shaders unchanged.</description>
+              <files>
+                <file source="selections\atmos_rc771_volumetric.txt" destination="DLSS Compatibility - Instructions\RC7.71 Volumetric Sunshafts selected.txt" priority="0" />
+              </files>
+              <conditionFlags>
+                <flag name="dlss_rc771_volumetric">On</flag>
+              </conditionFlags>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
             <plugin name="Glossy Puddles Overhaul v2.3 compatibility">
               <description>Select if Glossy Puddles Overhaul v2.3 (Erandis) is installed. v2.2 also works.
 Keeps its puddles and adds the ground motion vectors DLSS / FSR need.
@@ -152,6 +169,16 @@ Keep the original Glossy Puddles mod enabled, above this patch.</description>
         </dependencies>
         <files>
           <folder source="components\better_beefs_atmos_rc7\gamedata" destination="gamedata" priority="300" />
+        </files>
+      </pattern>
+      <!-- RC7.71's Volumetric Sunshafts shader; the RC7.x choice must also be selected. -->
+      <pattern>
+        <dependencies operator="And">
+          <flagDependency flag="dlss_atmos_rc7" value="On" />
+          <flagDependency flag="dlss_rc771_volumetric" value="On" />
+        </dependencies>
+        <files>
+          <folder source="components\atmos_rc771_volumetric\gamedata" destination="gamedata" priority="150" />
         </files>
       </pattern>
       <!-- Glossy Puddles replaces deffer_impl_flat.ps; one version per weather family. -->

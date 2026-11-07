@@ -406,6 +406,13 @@ public:
 	ref_shader s_dlss_sunshaft_mask;
 	u32 dlss_sunshaft_history = 0; // the target holding the latest mask
 	u32 dlss_sunshaft_frame = 0;
+	// Volumetric lights over time, with smoothed sunshafts after reconstruction.
+	// Created on first use: two display-size RGBA16F targets.
+	bool dlss_volumetric_history_available = false;
+	ref_rt rt_dlss_volumetric_history[2];
+	ref_shader s_dlss_volumetric_history;
+	u32 dlss_volumetric_history = 0; // the target holding the latest result
+	u32 dlss_volumetric_frame = 0;
 	ref_shader s_postprocess_msaa;
 	ref_geom g_postprocess;
 	ref_shader s_menu;
@@ -559,6 +566,11 @@ public:
 	void dlss_post_effects(float jitterX, float jitterY);
 	bool DlssSunshaftMaskOverTime() const;
 	void dlss_sunshaft_mask(u32 Offset);
+	bool DlssVolumetricOverTime() const;
+	// Volumetric sun shaders may march less: the history smooths what they leave.
+	bool DlssVolumetricOptimized() const;
+	void dlss_volumetric_history_create();
+	ID3DBaseTexture* dlss_volumetric_over_time(float jitterX, float jitterY);
 	void dlss_hdr_begin();
 	ID3DTexture2D* dlss_hdr_encode(u32 element);
 	void dlss_hdr_restore();

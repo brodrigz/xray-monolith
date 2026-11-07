@@ -2,7 +2,9 @@
 #define MONOLITH_DLSS_CONTRACT 1
 // Paired with the feat/dlss-sr renderer. Keep SSS vectors in their original
 // current-minus-previous UV convention; the engine supplies NGX's negative scale.
-uniform float4 dlss_params; // active, render width, render height, reserved
+// w: volumetric lights are smoothed over time after reconstruction, so a volumetric
+// sun shader may do less work per frame (r_upscaler_sunshafts optimized).
+uniform float4 dlss_params; // active, render width, render height, w above
 uniform float4 dlss_temporal_jitter; // current raster UV offset, previous raster UV offset
 float2 dlss_history_offset()
 {

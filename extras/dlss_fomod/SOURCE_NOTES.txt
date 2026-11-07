@@ -65,6 +65,19 @@ differs from RC7.6 only in comments, so Better Beef's + RC7.x reuses
 better_beefs_atmos_rc7. RC7.71 shaders read the engine's ssfx_timedelta
 (frame time, frame number in .y), which these binaries bind.
 
+RC7.71's installer ships two accum_volumetric_sun.ps: "Screenspace Sunshafts"
+(the same file as RC7.5 to RC7.7) and "Volumetric Sunshafts". Only the latter
+is replaced, by the optional page 3 choice atmos_rc771_volumetric, installed
+only together with the RC7.x choice. Its changes are marked [patch] in the
+file and only run when the engine sets dlss_params.w: r_upscaler_sunshafts
+optimized, with the post chain after reconstruction, where the volumetric
+lights are smoothed over time (dlss_volumetric_history.ps). Then rays take
+half the steps, the ray start and the edge-tested steps change every frame
+for the history to average, pixels whose result is zero skip the march, and
+the min-max map is read only in the _minmax variant the engine picks when it
+builds that map. Every other setting, and older binaries, leave
+dlss_params.w at 0, which keeps RC7.71's behaviour.
+
 GLOSSY PUDDLES OVERHAUL V2.3
 ----------------------------
 Source: Glossy Puddles Overhaul v2.3 - Erandis (local FOMOD). Glossy Puddles

@@ -47,6 +47,7 @@ void CRenderTarget::DoAsyncScreenshot()
 
 float hclip(float v, float dim) { return 2.f * v / dim - 1.f; }
 
+
 void CRenderTarget::phase_combine()
 {
 	PIX_EVENT_C(phase_combine, dx10_marker_combine);
@@ -929,6 +930,10 @@ void CRenderTarget::phase_combine_volumetric(bool high)
 {
 	PIX_EVENT(phase_combine_volumetric);
 	u32 Offset = 0;
+	// With smoothed sunshafts after reconstruction, the combine reads the volumetric
+	// lights over time: already display-sized and unjittered.
+	ID3DBaseTexture* raw = DlssVolumetricOverTime() ?
+		dlss_volumetric_over_time(dlss_post_jitter.x, dlss_post_jitter.y) : nullptr;
 	//Fvector2	p0,p1;
 
 	//	TODO: DX10: Remove half pixel offset here
@@ -955,7 +960,9 @@ void CRenderTarget::phase_combine_volumetric(bool high)
 
 		// Draw
 		RCache.set_Element(s_combine_volumetric->E[0]);
-		if (dlss_post_swapped)
+		if (raw)
+			RCache.set_c("dlss_volumetric_params", 0.f, 0.f, 1.f, 0.f);
+		else if (dlss_post_swapped)
 			RCache.set_c("dlss_volumetric_params", dlss_post_jitter.x / float(dlss::RenderWidth()),
 				dlss_post_jitter.y / float(dlss::RenderHeight()), 1.f, 0.f);
 		else
@@ -965,4 +972,10 @@ void CRenderTarget::phase_combine_volumetric(bool high)
 		RCache.Render(D3DPT_TRIANGLELIST, Offset, 0, 4, 0, 2);
 	}
 	RCache.set_ColorWriteEnable();
+	if (raw)
+	{
+		rt_Generic_2->pTexture->surface_set(raw);
+		_RELEASE(raw);
+		RCache.InvalidateTextures();
+	}
 }

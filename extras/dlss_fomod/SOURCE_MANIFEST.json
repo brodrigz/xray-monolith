@@ -30,6 +30,14 @@
       "original_sha256_lf": "042ee6b4a495c8d49205bf1b7d28f7afb13fbcec998af12240bcbed6bb727344",
       "component": "atmos_rc7",
       "patched_from": "extras/dlss_gamma/gamedata/shaders/r3/deffer_impl_flat.ps"
+    },
+    {
+      "version": "2.69 RC7.71",
+      "file": "accum_volumetric_sun.ps",
+      "archive_member": "Volumetric Sunshafts/gamedata/shaders/r3/accum_volumetric_sun.ps",
+      "original_sha256": "0a7b4a663937f8337185aa1f4a478f6a0132197a936768e3ba56079d8e1f16dd",
+      "component": "atmos_rc771_volumetric",
+      "patched_sha256": "722c0815a0ca2fd41ec7a46258e377551599d29511be5d3892f4a302ac0fd2d9"
     }
   ],
   "stock_atmospherics": {
