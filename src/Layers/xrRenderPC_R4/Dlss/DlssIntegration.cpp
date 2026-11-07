@@ -159,6 +159,10 @@ bool BackendReady()
 unsigned RenderScreenWidth() { return inScene ? dlss::RenderWidth() : Device.dwWidth; }
 unsigned RenderScreenHeight() { return inScene ? dlss::RenderHeight() : Device.dwHeight; }
 
+#ifdef XR_DX12_BRIDGE
+extern int ps_r_fg_dlss_frames_max;
+#endif
+
 namespace dlss
 {
 void InitializeTargets()
@@ -356,8 +360,10 @@ bool FrameGenerationSupported(unsigned id)
     case 4:
     {
         if (!FrameGenerationSupported(1)) return false;
-        // Unknown until Streamline starts; offered then, and run as 2x if the runtime says less.
-        const UINT max = StreamlineIntegration::MaxFramesToGenerate();
+        // Streamline reports its limit once it starts. Until then use what it last
+        // reported; offered only if never known, and run as 2x if the runtime says less.
+        UINT max = StreamlineIntegration::MaxFramesToGenerate();
+        if (!max) max = UINT(ps_r_fg_dlss_frames_max);
         return !max || max >= id - 1;
     }
     default: return false;

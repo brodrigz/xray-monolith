@@ -155,6 +155,9 @@ int ps_r_fg_hudless_test = 0;
 // afterimages. r_fg_laser_fill_view presents that image, to check the fill.
 int ps_r_fg_laser_fill = 1;
 int ps_r_fg_laser_fill_view = 0;
+// The most generated frames DLSS-G last reported (1 = 2x only), 0 = never started.
+// Hides 3x/4x in sessions that start without DLSS-G; updated whenever it starts.
+int ps_r_fg_dlss_frames_max = 0;
 // dlss3x/dlss4x ask DLSS-G for 2/3 generated frames, clamped to what the runtime allows.
 // Their ids follow fsr so saved configs keep their meaning.
 static xr_token frame_generation_token[] = {{"off",0},{"dlss",1},{"dlss3x",3},{"dlss4x",4},{"fsr",2},{nullptr,0}};
@@ -1674,6 +1677,7 @@ void xrRender_initconsole()
     CMD4(CCC_UnsavedInteger, "r_fg_hudless_test", &ps_r_fg_hudless_test, 0, 40);
     CMD4(CCC_Integer, "r_fg_laser_fill", &ps_r_fg_laser_fill, 0, 1);
     CMD4(CCC_UnsavedInteger, "r_fg_laser_fill_view", &ps_r_fg_laser_fill_view, 0, 1);
+    CMD4(CCC_Integer, "r_fg_dlss_frames_max", &ps_r_fg_dlss_frames_max, 0, 5);
 #endif
 	CMD3(CCC_Token, "r_fsr3_quality", &ps_r_fsr3_quality, fsr3_quality_token);
 	CMD3(CCC_Token, "r_dlss_preset", &ps_r_dlss_preset, dlss_preset_token);

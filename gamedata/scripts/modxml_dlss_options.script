@@ -118,9 +118,12 @@ end
 
 local function generation_choices()
     local caps = support()
+    local restart = caps.fg_dlss == "restart" and "_restart" or ""
     return content_for("r_frame_generation", {
         {"off", "dlss_off"},
-        {"dlss", caps.fg_dlss == "restart" and "fg_dlss_2x_restart" or "fg_dlss_2x"},
+        {"dlss", "fg_dlss_2x" .. restart},
+        {"dlss3x", "fg_dlss_3x" .. restart},
+        {"dlss4x", "fg_dlss_4x" .. restart},
         {"fsr", major(caps.fg_fsr) >= 4 and "fg_fsr4_2x" or "fg_fsr_2x"},
     })
 end

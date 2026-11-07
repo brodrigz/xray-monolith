@@ -12,6 +12,13 @@ std::atomic<bool> s_attempted{};
 // Process-wide, so the options menu can hide multipliers the runtime will not accept.
 // An MFG unlock loaded alongside the game raises what the runtime reports.
 std::atomic<UINT> s_framesMax{};
+}
+
+// r_fg_dlss_frames_max, saved: the runtime's limit for sessions where Streamline does not start.
+extern int ps_r_fg_dlss_frames_max;
+
+namespace
+{
 void StreamlineLog(sl::LogType type, const char* message)
 {
     if (type == sl::LogType::eInfo) return; // Full details remain in sl.log.
@@ -31,6 +38,7 @@ void StreamlineIntegration::NoteFramesMax(UINT reported)
     if (reported < 1 || reported > 5 || reported == m_framesMax) return;
     m_framesMax = reported;
     s_framesMax.store(reported);
+    ps_r_fg_dlss_frames_max = int(reported);
     char message[96]{};
     snprintf(message, sizeof(message), "[DLSS FG] Runtime allows up to %ux frame generation.", reported + 1);
     Log(message);
@@ -239,6 +247,7 @@ bool StreamlineIntegration::SetEnabled(bool enabled, UINT framesToGenerate)
         m_framesRefused = true;
         m_framesMax = 1;
         s_framesMax.store(1);
+        ps_r_fg_dlss_frames_max = 1;
         frames = options.numFramesToGenerate = 1;
         result = m_slDLSSGSetOptions(m_viewport, options);
     }
