@@ -580,8 +580,6 @@ public:
 	bool DlssSunshaftMaskOverTime() const;
 	void dlss_sunshaft_mask(u32 Offset);
 	bool DlssVolumetricOverTime() const;
-	// Volumetric sun shaders may march less: the history smooths what they leave.
-	bool DlssVolumetricOptimized() const;
 	void dlss_volumetric_history_create();
 	ID3DBaseTexture* dlss_volumetric_over_time(float jitterX, float jitterY);
 	bool fg_hudless_create(D3DFORMAT format);

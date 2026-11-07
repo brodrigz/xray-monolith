@@ -36,12 +36,6 @@ Better Beef's NVGs (.19):
   Put its patches below its main files, and this compatibility patch last.
   Clear the shader cache through the launcher after changing NVG mods.
 
-Atmospherics RC7.71 Volumetric Sunshafts:
-  Select only with the RC7.x choice on page 2 and "Volumetric Sunshafts"
-  picked in the RC7.71 installer. Leave unchecked for "Screenspace Sunshafts".
-  Needed for the "Optimized smoothing" sunshaft choice; without it that choice
-  looks and costs the same as "Smoothed".
-
 Glossy Puddles Overhaul v2.3 (Erandis, v2.2 also works):
   Select only if the original mod is installed and enabled.
   The patch picks the matching version from your Atmospherics choice:

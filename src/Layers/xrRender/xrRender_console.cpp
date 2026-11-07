@@ -25,7 +25,7 @@ int ps_r_upscaler_particles_after = 0;
 u32 ps_r_upscaler_sunshafts = UPSCALER_SUNSHAFTS_SMOOTHED;
 xr_token upscaler_sunshafts_token[] = {
     {"upscaled", UPSCALER_SUNSHAFTS_UPSCALED}, {"smoothed", UPSCALER_SUNSHAFTS_SMOOTHED},
-    {"optimized", UPSCALER_SUNSHAFTS_OPTIMIZED}, {"raw", UPSCALER_SUNSHAFTS_RAW}, {nullptr, 0}
+    {"raw", UPSCALER_SUNSHAFTS_RAW}, {nullptr, 0}
 };
 int ps_r_dlss_hdr_input = 1;
 xr_token dlss_preset_token[] = {
@@ -1693,7 +1693,6 @@ void xrRender_initconsole()
 	CMD4(CCC_UnsavedInteger, "r_upscaler_debug", &ps_r_upscaler_debug, 0, 2);
 	// With the post chain after the upscaler: sunshafts before it (upscaled), or after it with the
 	// screen-space mask and the volumetric lights smoothed over time (smoothed) or not (raw).
-	// optimized: smoothed, with a cheaper volumetric sun where its shader supports it
 	CMD3(CCC_Token, "r_upscaler_sunshafts", &ps_r_upscaler_sunshafts, upscaler_sunshafts_token);
 #endif
 	CMD3(CCC_Mask,		"r2_gi",				&ps_r2_ls_flags,			R2FLAG_GI);

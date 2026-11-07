@@ -4,7 +4,7 @@ local command_tokens = {
     r_fsr3_quality = {"native_aa", "quality", "balanced", "performance", "ultra_performance"},
     r_dlss_quality = {"off", "dlaa", "quality", "balanced", "performance", "ultra_performance"},
     r_dlss_preset = {"default", "j", "k", "l", "m"},
-    r_upscaler_sunshafts = {"upscaled", "smoothed", "optimized", "raw"},
+    r_upscaler_sunshafts = {"upscaled", "smoothed", "raw"},
 }
 local live = {r_upscaler = "dlss", r_dlss_quality = "quality", r_fsr3_quality = "balanced",
     r_dlss_preset = "k", r_dlss_sharpness = 0.35, r_upscaler_post_after = "1",
@@ -253,29 +253,12 @@ set_sunshaft_type("off")
 expect("upscaler,dlss_mode,dlss_preset,dlss_linear_input,dlss_sharpness,upscaler_post_after,upscaler_particles_after")
 set_sunshaft_type("volumetric")
 expect("upscaler,dlss_mode,dlss_preset,dlss_linear_input,dlss_sharpness," .. SWITCHES)
-assert(handling_values() == "upscaled,smoothed,optimized,raw" and menu.values.upscaler_sunshafts == "smoothed")
+-- Volumetric sunshafts are smoothed too: the same choices for every type.
+assert(handling_values() == "upscaled,smoothed,raw" and menu.values.upscaler_sunshafts == "smoothed")
 set_sunshaft_type("combined")
-assert(handling_values() == "upscaled,smoothed,optimized,raw")
+assert(handling_values() == "upscaled,smoothed,raw")
 discard()
 assert(handling_values() == "upscaled,smoothed,raw" and menu.values.upscaler_sunshafts == "smoothed")
--- Optimized smoothing runs as Smoothed with screen-space sunshafts, and is shown so.
-live.r_upscaler_sunshafts = "optimized"
-set_sunshaft_type("volumetric")
-assert(menu.values.upscaler_sunshafts == "optimized")
-discard()
-assert(handling_values() == "upscaled,smoothed,raw" and menu.values.upscaler_sunshafts == "smoothed")
-assert(live.r_upscaler_sunshafts == "optimized", "Showing Smoothed wrote to the live console")
-live.r_upscaler_sunshafts = "smoothed"
-discard()
--- Binaries without optimized smoothing only smooth screen-space sunshafts.
-command_tokens.r_upscaler_sunshafts = {"upscaled", "smoothed", "raw"}
-set_sunshaft_type("volumetric")
-assert(handling_values() == "upscaled,raw" and menu.values.upscaler_sunshafts == "raw")
-assert(live.r_upscaler_sunshafts == "smoothed", "Showing Raw wrote to the live console")
-discard()
-assert(handling_values() == "upscaled,smoothed,raw" and menu.values.upscaler_sunshafts == "smoothed")
-command_tokens.r_upscaler_sunshafts = {"upscaled", "smoothed", "optimized", "raw"}
-open()
 change("upscaler_sunshafts", "upscaled")
 menu:On_Accept()
 assert(live.r_upscaler_sunshafts == "upscaled")

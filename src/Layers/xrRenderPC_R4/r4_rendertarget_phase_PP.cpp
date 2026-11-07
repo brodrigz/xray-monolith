@@ -458,7 +458,7 @@ void CRenderTarget::dlss_post_effects(float jitterX, float jitterY)
 bool CRenderTarget::DlssSunshaftMaskOverTime() const
 {
 	return dlss_post_swapped && s_dlss_sunshaft_mask._get() != nullptr &&
-		UpscalerSunshaftsSmoothed(ps_r_upscaler_sunshafts);
+		ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_SMOOTHED;
 }
 
 // This frame's mask is in rt_sunshafts_1; the blurs read the result from rt_sunshafts_0.
@@ -485,14 +485,7 @@ void CRenderTarget::dlss_sunshaft_mask(u32 Offset)
 bool CRenderTarget::DlssVolumetricOverTime() const
 {
 	return dlss_post_swapped && dlss_volumetric_history_available && !RImplementation.o.dx10_msaa &&
-		UpscalerSunshaftsSmoothed(ps_r_upscaler_sunshafts);
-}
-
-// Read while the volumetric lights are drawn, before the post chain is swapped in.
-bool CRenderTarget::DlssVolumetricOptimized() const
-{
-	return ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_OPTIMIZED && DlssPostAfterUpscale() &&
-		dlss_volumetric_history_available && !RImplementation.o.dx10_msaa;
+		ps_r_upscaler_sunshafts == UPSCALER_SUNSHAFTS_SMOOTHED;
 }
 
 // Blends this frame's volumetric lights into the display-size history, unjittered,

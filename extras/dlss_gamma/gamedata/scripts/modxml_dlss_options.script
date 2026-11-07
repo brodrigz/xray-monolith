@@ -70,37 +70,12 @@ local function sunshaft_type(menu)
     return get_console_cmd(0, "r2_sunshafts_mode")
 end
 
--- Binaries that offer the optimized smoothing also smooth volumetric sunshafts;
--- older ones only smooth screen-space sunshafts.
-local function smooths_volumetric()
-    for _, token in ipairs(get_console():get_token_list("r_upscaler_sunshafts") or {}) do
-        if token == "optimized" then return true end
-    end
-    return false
-end
-
--- Optimized smoothing only differs from Smoothed for volumetric sunshafts.
-local function sunshaft_handling_choices(kind)
-    local choices = {{"upscaled", "upscaler_sunshafts_upscaled"}}
-    if kind ~= "volumetric" or smooths_volumetric() then
-        choices[#choices + 1] = {"smoothed", "upscaler_sunshafts_smoothed"}
-    end
-    if kind ~= "screen_space" then choices[#choices + 1] = {"optimized", "upscaler_sunshafts_optimized"} end
-    choices[#choices + 1] = {"raw", "upscaler_sunshafts_raw"}
-    return content_for("r_upscaler_sunshafts", choices)
-end
-
-local sunshaft_kind
-
--- The shown choice that runs the same as value with this sunshaft type.
-local function shown_sunshaft_handling(value)
-    if value == "optimized" and sunshaft_kind == "screen_space" then return "smoothed" end
-    if value == "smoothed" and sunshaft_kind == "volumetric" and not smooths_volumetric() then return "raw" end
-    return value
-end
-
-local function current_sunshaft_handling()
-    return shown_sunshaft_handling(get_console_cmd(0, "r_upscaler_sunshafts"))
+-- Smoothed covers both screen-space and volumetric sunshafts.
+local function sunshaft_handling_choices()
+    return content_for("r_upscaler_sunshafts", {
+        {"upscaled", "upscaler_sunshafts_upscaled"}, {"smoothed", "upscaler_sunshafts_smoothed"},
+        {"raw", "upscaler_sunshafts_raw"},
+    })
 end
 
 local function major(version)
@@ -148,15 +123,7 @@ local function install_dynamic_options()
             method = self:GetCurrentValue(path, selector.id, selector)
         end
         local post_on = post_after and self:GetCurrentValue(path, post_after.id, post_after)
-        local handling = path == "video/basic" and find_row(tree, "upscaler_sunshafts")
-        local sunshafts = handling and sunshaft_type(self)
-        if handling then
-            sunshaft_kind = sunshafts
-            handling.content = sunshaft_handling_choices(sunshafts)
-            local pending = self:GetCurrentValue(path, handling.id, handling)
-            local shown = shown_sunshaft_handling(pending)
-            if shown ~= pending then self:CacheValue(path, handling.id, shown, handling) end
-        end
+        local sunshafts = path == "video/basic" and find_row(tree, "upscaler_sunshafts") and sunshaft_type(self)
         local visible = {}
         for key, value in pairs(tree) do visible[key] = value end
         visible.gr = {}
@@ -309,11 +276,11 @@ local function add_options()
                         add(switch_row("upscaler_post_after", "r_upscaler_post_after", {
                             vid = true, upscaler_method = dual and "either" or nil,
                         }))
-                        if #sunshaft_handling_choices() > 0 then
+                        local handling = sunshaft_handling_choices()
+                        if #handling > 0 then
                             add({
                                 id = "upscaler_sunshafts", type = "list", val = 0,
-                                cmd = "r_upscaler_sunshafts", content = sunshaft_handling_choices(),
-                                curr = {current_sunshaft_handling},
+                                cmd = "r_upscaler_sunshafts", content = handling,
                                 needs_post_after = true, needs_sunshafts = true,
                                 upscaler_method = dual and "either" or nil,
                             })

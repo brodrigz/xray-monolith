@@ -16,14 +16,7 @@ enum
 	UPSCALER_SUNSHAFTS_UPSCALED,
 	UPSCALER_SUNSHAFTS_SMOOTHED,
 	UPSCALER_SUNSHAFTS_RAW,
-	// Smoothed, with volumetric sunshaft shaders that read dlss_params.w doing less
-	// work per frame and leaving the rest to the smoothing.
-	UPSCALER_SUNSHAFTS_OPTIMIZED,
 };
-inline bool UpscalerSunshaftsSmoothed(u32 mode)
-{
-	return mode == UPSCALER_SUNSHAFTS_SMOOTHED || mode == UPSCALER_SUNSHAFTS_OPTIMIZED;
-}
 extern ECORE_API u32 ps_r_upscaler_sunshafts;
 extern ECORE_API int ps_r_dlss_hdr_input;
 extern ECORE_API float ps_ssfx_fog_scattering;
