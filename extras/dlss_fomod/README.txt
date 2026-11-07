@@ -8,8 +8,8 @@ INSTALL
 3. Install this ZIP through MO2:
    - Page 1: leave the required SSS 23.5 option checked.
    - Page 2: choose your installed Atmospherics version, or None.
-     RC7.5 to RC7.71 share one choice, whatever AO / IL / SSR options you
-     picked in the Atmospherics installer.
+     RC7.5 to RC7.71 share one choice and RC8 has its own, whatever
+     options you picked in the Atmospherics installer.
    - Page 3: select only the add-ons you have installed.
 4. Enable this patch BELOW SSS, Atmospherics and any other shader mods
    in MO2's left pane.
@@ -39,9 +39,12 @@ Better Beef's NVGs (.19):
 Glossy Puddles Overhaul v2.3 (Erandis, v2.2 also works):
   Select only if the original mod is installed and enabled.
   The patch picks the matching version from your Atmospherics choice:
-    Atmospherics RC7.x -> Glossy Puddles "PBR Shader Based Weathers"
-    anything else      -> Glossy Puddles "SSS Based Weathers"
+    Atmospherics RC7.x or RC8 -> Glossy Puddles "PBR Shader Based Weathers"
+    anything else             -> Glossy Puddles "SSS Based Weathers"
   Put Glossy Puddles above this compatibility patch in MO2's left pane.
+  With RC8, Glossy Puddles' own files replace some of RC8's puddle and
+  reflection shaders (pbr_brdf_terrain.h, settings_screenspace_PUDDLES.h,
+  screenspace_reflections.h, ssfx_ssr_gloss.ps, deffer_terrain_high_flat_d.ps).
 
 UPDATING OR CHANGING OPTIONS
 ---------------------------

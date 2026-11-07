@@ -84,6 +84,24 @@ Keep only one Atmospherics version enabled.</description>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
+            <plugin name="Atmospherics 2.69 RC8">
+              <description>Choose this for Atmospherics 2.69 RC8,
+with any sunshaft, AO, fog, horizon, IL and SSR options picked in its installer.
+
+Keep only one Atmospherics version enabled.</description>
+              <files>
+                <!-- RC8's deffer_impl_flat.ps is identical to RC7.x's. -->
+                <folder source="components\atmos_rc7\gamedata" destination="gamedata" priority="100" />
+                <file source="selections\atmos_rc8.txt" destination="DLSS Compatibility - Instructions\Selected Atmospherics.txt" priority="0" />
+              </files>
+              <conditionFlags>
+                <flag name="dlss_atmos_rc8">On</flag>
+                <flag name="dlss_weather_family">pbr</flag>
+              </conditionFlags>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
           </plugins>
         </group>
       </optionalFileGroups>
@@ -123,8 +141,9 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
 Keeps its puddles and adds the ground motion vectors DLSS / FSR need.
 
 Matches the Atmospherics choice on page 2:
-- Atmospherics RC7.x: for "PBR Shader Based Weathers" in Glossy Puddles.
+- Atmospherics RC7.x or RC8: for "PBR Shader Based Weathers" in Glossy Puddles.
 - Otherwise: for "SSS Based Weathers" in Glossy Puddles.
+With RC8, Glossy Puddles' own files replace some of RC8's puddle and reflection shaders.
 
 Keep the original Glossy Puddles mod enabled, above this patch.</description>
               <files>
@@ -152,6 +171,16 @@ Keep the original Glossy Puddles mod enabled, above this patch.</description>
         </dependencies>
         <files>
           <folder source="components\better_beefs_atmos_rc7\gamedata" destination="gamedata" priority="300" />
+        </files>
+      </pattern>
+      <!-- RC8's combine_2_naa.ps has new debanding and dither (atmos_dither.h, not in RC7.x). -->
+      <pattern>
+        <dependencies operator="And">
+          <flagDependency flag="dlss_atmos_rc8" value="On" />
+          <flagDependency flag="dlss_better_beefs" value="On" />
+        </dependencies>
+        <files>
+          <folder source="components\better_beefs_atmos_rc8\gamedata" destination="gamedata" priority="300" />
         </files>
       </pattern>
       <!-- Glossy Puddles replaces deffer_impl_flat.ps; one version per weather family. -->

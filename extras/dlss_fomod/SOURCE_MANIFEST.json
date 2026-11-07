@@ -30,6 +30,15 @@
       "original_sha256_lf": "042ee6b4a495c8d49205bf1b7d28f7afb13fbcec998af12240bcbed6bb727344",
       "component": "atmos_rc7",
       "patched_from": "extras/dlss_gamma/gamedata/shaders/r3/deffer_impl_flat.ps"
+    },
+    {
+      "version": "2.69 RC8",
+      "file": "deffer_impl_flat.ps",
+      "archive_member": "In common/gamedata/shaders/r3/deffer_impl_flat.ps",
+      "original_sha256": "273f6312624ad4bf6d56c994cc26f9ec15c700f2c8b13c165c6dddc31eac9cb1",
+      "original_sha256_lf": "042ee6b4a495c8d49205bf1b7d28f7afb13fbcec998af12240bcbed6bb727344",
+      "component": "atmos_rc7",
+      "patched_from": "extras/dlss_gamma/gamedata/shaders/r3/deffer_impl_flat.ps"
     }
   ],
   "stock_atmospherics": {
@@ -67,6 +76,14 @@
         "source": "Atmospherics 2.69 RC7.6/gamedata/shaders/r3/combine_2_naa.ps",
         "original_sha256": "f9adb91832b20fce93dfa4c50fff1a20e8afed829b9d618268147b9a2919e469",
         "patched_sha256": "a82ab803b91b496cdead33107dcff24911e8ed8e5ebacfef671d223327298b76"
+      },
+      {
+        "component": "better_beefs_atmos_rc8",
+        "file": "combine_2_naa.ps",
+        "source": "Atmospherics 2.69 RC8/In common/gamedata/shaders/r3/combine_2_naa.ps",
+        "original_sha256": "0399e59b410f9a3bf18f48df595277ef1292a43117a240e8a1fc47128b3245e9",
+        "original_sha256_lf": "71648f4daf6587b39ba28a51d8b56eae4fd29234b812e3531143179bc5636016",
+        "patched_sha256": "2eb3262f8d522faa0c757f47305d0c41c9c30a64086e7314994ac11d2a80a7f2"
       }
     ],
     "atmos_combine_original_sha256_lf": "f9adb91832b20fce93dfa4c50fff1a20e8afed829b9d618268147b9a2919e469",
@@ -95,5 +112,9 @@
         "patched_sha256": "1ea6b397eca4cad1716bb9fa63acd607a6ca0ed36409d817689b77101af7f478"
       }
     ]
+  },
+  "atmos_rc8_archive": {
+    "archive": "Atmospherics 2.69 RC8.7z",
+    "sha256": "6861dcb94e5d1d3424376e3c3469ca2f3f421074ea8afa98f85a68de1d5866fd"
   }
 }

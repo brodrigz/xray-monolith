@@ -65,6 +65,15 @@ differs from RC7.6 only in comments, so Better Beef's + RC7.x reuses
 better_beefs_atmos_rc7. RC7.71 shaders read the engine's ssfx_timedelta
 (frame time, frame number in .y), which these binaries bind.
 
+Atmospherics 2.69 RC8 has its own choice. Its deffer_impl_flat.ps ("In
+common") is byte-identical to RC7.71's, so the choice installs the same
+atmos_rc7 component. Its combine_2_naa.ps changed (sky-only debanding and a
+triangular dither from the new atmos_dither.h, which RC7.x lacks), so
+Better Beef's + RC8 installs better_beefs_atmos_rc8. RC8 replaces none of the
+base component's files. Its volumetric sun reads volume_range (set by the
+stock engine per sun cascade) and skips the near cascade; rain_apply_gloss.ps
+reads s_patched_normal, which the stock rain blender binds.
+
 GLOSSY PUDDLES OVERHAUL V2.3
 ----------------------------
 Source: Glossy Puddles Overhaul v2.3 - Erandis (local FOMOD). Glossy Puddles
@@ -134,6 +143,12 @@ better_beefs_atmos_rc7/combine_2_naa.ps:
   identical after newline normalization. Add Better Beef's LUT-mask condition
   around ssfx_lut_pp without removing Atmospherics clarity or final dithering.
   Only installed when BOTH RC7.x and Better Beef's are selected.
+
+better_beefs_atmos_rc8/combine_2_naa.ps:
+  Start with Atmospherics RC8's "In common" file, newlines normalized. Add
+  the same Better Beef's LUT-mask condition around ssfx_lut_pp, keeping RC8's
+  debanding and dither. Only installed when BOTH RC8 and Better Beef's are
+  selected.
 
 The original mod remains responsible for its generation shaders, settings
 and Lua scripts, including its FDDA Redone patch where applicable. Its
