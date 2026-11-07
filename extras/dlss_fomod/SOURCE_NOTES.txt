@@ -74,14 +74,20 @@ base component's files. Its volumetric sun reads volume_range (set by the
 stock engine per sun cascade) and skips the near cascade; rain_apply_gloss.ps
 reads s_patched_normal, which the stock rain blender binds.
 
-GLOSSY PUDDLES OVERHAUL V2.3
+GLOSSY PUDDLES OVERHAUL V2.4
 ----------------------------
-Source: Glossy Puddles Overhaul v2.3 - Erandis (local FOMOD). Glossy Puddles
+Source: Glossy Puddles Overhaul v2.4 - Erandis (local FOMOD). Glossy Puddles
 replaces deffer_impl_flat.ps without the motion-vector output, so flat ground
 loses temporal motion under DLSS / FSR. Its FOMOD ships two distinct versions
 of that file: "PBR Puddles" (PBR Shader Based Weathers, both the SSS 23.5 and
 SSS 24 / RC3 folders are identical) and "SSS Puddles" (SSS Based Weathers,
-likewise identical across SSS versions). Its folders keep the v2.2 names.
+likewise identical across SSS versions).
+
+v2.4's two deffer_impl_flat.ps files match v2.3's after newline
+normalization, so the patched files are unchanged. v2.4 fixes Atmospherics
+RC8: v2.3's pbr_brdf_terrain.h lacks g_terrain_nv, which RC8's lmodel.h
+writes, so v2.3 above RC8 fails to compile most RC8 lighting shaders with or
+without this patch. v2.4 declares it.
 
 glossy_puddles_pbr / glossy_puddles_sss deffer_impl_flat.ps:
   Add #include "screenspace_mvectors.h" and assign O.velocity before
@@ -90,10 +96,9 @@ glossy_puddles_pbr / glossy_puddles_sss deffer_impl_flat.ps:
   v2.3 changed only the PBR file: bus_erandis is now declared behind
   GP_BUS_ERANDIS_DECLARED, because its settings_screenspace_PUDDLES.h also
   declares it. Without that guard the PBR file fails to compile against
-  v2.3. The SSS file is unchanged from v2.2. Both patched files also work
-  with v2.2.
+  v2.3 and later. The SSS file is unchanged from v2.2.
 
-Every Atmospherics choice sets dlss_weather_family: pbr for RC7.x, sss
+Every Atmospherics choice sets dlss_weather_family: pbr for RC7.x and RC8, sss
 otherwise. With the checkbox on, a conditional install at priority 250 picks
 the matching file. Its other files (scripts, terrain shader, SSR header) keep
 motion vectors or touch nothing this patch overrides and are not included.
@@ -182,6 +187,14 @@ updating this provenance and the stated compatibility versions deliberately.
 
 STATUS
 ------
+0.72: lmape.vs, dlss_volumetric_history.ps and the frame generation laser fill
+shaders join the base component, and Atmospherics RC8 gets its own choice. The
+patch's own shaders compile on SSS 23.5, stock Atmospherics, RC7.71 and RC8
+(with either feature set, or with Better Beef's), and break none of RC8's
+shaders. Glossy Puddles v2.4 compiles on all of these stacks (PBR with both
+SSR choices, SSS) and the patch breaks none of their shaders on top of it.
+This exact package was not installed through MO2.
+
 0.71: vert.vs joins the base component. The patch's own shaders compile on SSS 23.5,
 stock Atmospherics and RC7.71. This exact package was not installed through MO2,
 and the other installer choices were not exercised.

@@ -46,7 +46,7 @@ Apply saves both console values and requests vid_restart; Cancel does not apply
 pending changes. No full ui_options.script replacement is needed.
 Default lets NVIDIA choose the model for the scaling mode. Explicit presets are
 requests, not guarantees against driver overrides. Deprecated SR preset F and
-reserved presets are deliberately omitted for the 310.9.1 runtime.
+reserved presets are deliberately omitted for the 310.9.x runtime.
 Native rendering is the default. Turn MSAA off before enabling either upscaler.
 The matching shader override is required for either method. DLSS additionally
 requires an NGX-compatible RTX GPU/driver; FSR3 requires feature level 11.1.
@@ -63,10 +63,10 @@ even though this configuration uses Release compilation:
   _build\_game\bin_dbg\AnomalyDX11.exe
 
 Supply NVIDIA's release nvngx_dlss.dll beside the executable. The local tests
-use version 310.9.1.0 (latest public release verified 2026-10-07).
-Official release: https://github.com/NVIDIA/DLSS/releases/tag/v310.9.1
-Runtime: https://raw.githubusercontent.com/NVIDIA/DLSS/v310.9.1/lib/Windows_x86_64/rel/nvngx_dlss.dll
-SHA256: 3975567B8943C53ACCE397F2B72380092F84F162D00B0D2C7D08A1025C563983
+use version 310.9.16.0 (latest public release verified 2026-11-07).
+Official release: https://github.com/NVIDIA/DLSS/releases/tag/v310.9.16
+Runtime: https://raw.githubusercontent.com/NVIDIA/DLSS/v310.9.16/lib/Windows_x86_64/rel/nvngx_dlss.dll
+SHA256: D00B5B0AB29C3CA101B70C3A5ECB3A01B7EF33766A3383A28A18623083E6123E
 Size: 58,956,912 bytes; valid NVIDIA Authenticode signature.
 Runtime DLLs are not tracked. The existing compatible NGX SDK is unchanged.
 Keep the matching engine's normal dependencies. Do not add Streamline DLLs.

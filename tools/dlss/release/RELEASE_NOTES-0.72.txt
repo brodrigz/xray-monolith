@@ -1,0 +1,17 @@
+0.72
+
+* Update both downloads: reinstall the compatibility patch with REPLACE and clear the shader cache
+* Fixed lasers, laser dots and holo/red dot reticles leaving afterimages with frame generation (FSR FG and DLSS-G)
+   * `r_fg_laser_fill` On by default. They are removed from the image frame generation interpolates from, so it shows the real dot instead of a warped copy
+* New DLSS 3x and 4x frame generation, for RTX 50 cards or older RTX cards with a frame generation unlock. Elsewhere they run as 2x, and they are hidden once the runtime has reported that only 2x is allowed
+   * `r__framelimit` now goes up to 2000, since with frame generation it counts displayed frames
+* Laser beams are now drawn after the upscaler in both post-processing modes
+* Volumetric sunshafts are now smoothed too when Sunshafts is set to Smoothed, so they shimmer less (Post-Processing After Upscaling only)
+* Fixed some reflective level surfaces not getting the upscaler's jitter, which could make them look blocky while standing still
+* Increased the priority of DX12 resources so they are less likely to be evicted from VRAM, which might avoid crashes in VRAM-limited scenarios
+* Updated the DLSS upscaler to 310.9.16 (NVIDIA bug fixes; frame generation and Streamline were already on the latest)
+* Compatibility patch: new Atmospherics 2.69 RC8 choice
+* Fixed an engine memory bug: memory that shrank and then grew again could keep old data where the engine expects zeros
+* New defaults: DLSS Linear Input on, Post-Processing After Upscaling off, Sunshafts Smoothed
+   * `r_upscaler_post_after 1` (Post-Processing After Upscaling) is now off by default, because it costs FPS and VRAM, especially on weaker GPUs. Turn it on for full-resolution effects. Existing configs keep their setting
+   * With it off, DLSS Linear Input can make tree foliage behind depth of field shimmer at Performance and below. Turn off DLSS Linear Input if you see this

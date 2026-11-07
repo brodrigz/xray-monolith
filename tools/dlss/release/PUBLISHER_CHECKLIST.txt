@@ -5,7 +5,7 @@ The archives are prepared locally; nothing has been uploaded or published.
 Before publishing:
 - Read the included SDK/runtime licenses and confirm distribution obligations.
   Exact runtime license:
-  https://github.com/NVIDIA/DLSS/blob/v310.9.1/LICENSE.txt
+  https://github.com/NVIDIA/DLSS/blob/v310.9.16/LICENSE.txt
 - Confirm permission/terms for redistributing the merged SSS, Atmospherics and
   Beef NVG shader files. Attribution is not a substitute for permission.
   This packaging task has not established those authors' redistribution terms.

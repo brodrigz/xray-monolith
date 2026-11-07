@@ -9,7 +9,7 @@ Engine base: all-in-one-vs2022-wpo-mt.
 GSC's non-commercial engine license is reproduced in the binary packages.
 
 NVIDIA DLSS / NGX:
-https://github.com/NVIDIA/DLSS/releases/tag/v310.9.1
+https://github.com/NVIDIA/DLSS/releases/tag/v310.9.16
 This software contains source code provided by NVIDIA Corporation.
 The pinned release runtime and SDK are subject to their included license notices.
 

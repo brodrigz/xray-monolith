@@ -1,4 +1,4 @@
-DLSS / FSR3 CREDITS
+NATIVE UPSCALING BINARIES CREDITS
 ============================
 OGSR team and xrSimpAI - original DLSS implementation
 https://github.com/OGSR/OGSR-Engine

@@ -7,7 +7,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
-if (-not $RuntimeDirectory) { $RuntimeDirectory = Join-Path $repo '_build\dlss_310.9.1' }
+if (-not $RuntimeDirectory) { $RuntimeDirectory = Join-Path $repo '_build\dlss_310.9.16' }
 $revision = (& git -C $repo -c "safe.directory=$repo" rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot determine source revision' }
 $changedPaths = @(& git -C $repo -c "safe.directory=$repo" diff --name-only HEAD -- src sdk extras gamedata)
@@ -87,7 +87,7 @@ foreach ($package in $packages) {
         upstream_base='7b79d2be'
         variant=$package.Variant
         configuration='Release x64; engine solution DX11 or DX11-AVX as named'
-        dlss_runtime='310.9.1.0'
+        dlss_runtime='310.9.16.0'
         fsr_upscaler='3.1.2 community D3D11'
         frame_generation=$false
         note='Manifest covers payload files, excluding this manifest itself. No gameplay/FPS guarantee.'

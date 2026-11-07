@@ -93,20 +93,21 @@
     ]
   },
   "glossy_puddles": {
-    "source_package": "Glossy Puddles Overhaul v2.3 - Erandis",
+    "source_package": "Glossy Puddles Overhaul v2.4 - Erandis",
+    "source_archive_sha256": "197ed614737db337b0463e56df292be4df8397a87dfe71a5a0df16ed64c59af7",
     "files": [
       {
         "component": "glossy_puddles_pbr",
         "file": "deffer_impl_flat.ps",
-        "source": "Glossy Puddles v2.2 - PBR Puddles - Erandis\\gamedata\\shaders\\r3\\deffer_impl_flat.ps",
-        "original_sha256": "78d5b7f7e5319ec43aadeeadebdd23144537529ef35cf7d104383e7eaccb9ddb",
+        "source": "Glossy Puddles v2.4 - PBR Puddles - Erandis\\gamedata\\shaders\\r3\\deffer_impl_flat.ps",
+        "original_sha256": "ec97dac41a51a4a50dc9f8c8ea6e5fe63ede3d3b4c6d0274631943e8458c9c08",
         "original_sha256_lf": "53f6c930db3f95fa5c15e1ac400d054b2146c1df6d5bfc50e4c629a422a6483a",
         "patched_sha256": "967433d08b000d876b2fd6bd36c75ece259035909e711e54986597157045b4fa"
       },
       {
         "component": "glossy_puddles_sss",
         "file": "deffer_impl_flat.ps",
-        "source": "Glossy Puddles v2.2 - SSS Puddles - Erandis\\gamedata\\shaders\\r3\\deffer_impl_flat.ps",
+        "source": "Glossy Puddles v2.4 - SSS Puddles - Erandis\\gamedata\\shaders\\r3\\deffer_impl_flat.ps",
         "original_sha256": "858a120a0e8572d98a299a60d76ac55f3fcdb6b51ed467001749273b12aa2fd7",
         "original_sha256_lf": "4722a531b571580040ee8285b4f6340bdf28a4185ee39c76a208c969c1e37089",
         "patched_sha256": "1ea6b397eca4cad1716bb9fa63acd607a6ca0ed36409d817689b77101af7f478"

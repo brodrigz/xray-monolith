@@ -1,14 +1,14 @@
-DLSS / FSR3 COMPATIBILITY PATCH - 0.71
+NATIVE UPSCALING BINARIES COMPATIBILITY PATCH - 0.72
 https://github.com/brodrigz/xray-monolith
 
 INSTALL
 -------
-1. Install the 0.71 DLSS / FSR3 binaries using that release's instructions.
+1. Install Native Upscaling Binaries 0.72 using that release's instructions.
 2. Install and enable SSS 23.5 with GAMMA's recommended options.
 3. Install this ZIP through MO2:
    - Page 1: leave the required SSS 23.5 option checked.
    - Page 2: choose your installed Atmospherics version, or None.
-     RC7.5 to RC7.71 share one choice and RC8 has its own, whatever
+     RC7.5 to RC7.71 share the RC7 choice and RC8 has its own, whatever
      options you picked in the Atmospherics installer.
    - Page 3: select only the add-ons you have installed.
 4. Enable this patch BELOW SSS, Atmospherics and any other shader mods
@@ -36,21 +36,20 @@ Better Beef's NVGs (.19):
   Put its patches below its main files, and this compatibility patch last.
   Clear the shader cache through the launcher after changing NVG mods.
 
-Glossy Puddles Overhaul v2.3 (Erandis, v2.2 also works):
+Glossy Puddles Overhaul v2.4 (Erandis):
   Select only if the original mod is installed and enabled.
   The patch picks the matching version from your Atmospherics choice:
-    Atmospherics RC7.x or RC8 -> Glossy Puddles "PBR Shader Based Weathers"
-    anything else             -> Glossy Puddles "SSS Based Weathers"
+    Atmospherics RC7 or RC8 -> Glossy Puddles "PBR Shader Based Weathers"
+    anything else           -> Glossy Puddles "SSS Based Weathers"
   Put Glossy Puddles above this compatibility patch in MO2's left pane.
-  With RC8, Glossy Puddles' own files replace some of RC8's puddle and
-  reflection shaders (pbr_brdf_terrain.h, settings_screenspace_PUDDLES.h,
-  screenspace_reflections.h, ssfx_ssr_gloss.ps, deffer_terrain_high_flat_d.ps).
+  With Atmospherics RC8, use Glossy Puddles v2.4. Older versions replace
+  RC8's pbr_brdf_terrain.h with one RC8 cannot compile against.
 
 UPDATING OR CHANGING OPTIONS
 ---------------------------
 Reinstall this patch when changing Atmospherics or any optional add-on.
 Choose REPLACE in MO2 so files from your old selections are removed.
-Keep only one DLSS / FSR3 compatibility patch enabled.
+Keep only one Native Upscaling Binaries compatibility patch enabled.
 
 CUSTOM SSS INSTALLATION ONLY
 ---------------------------

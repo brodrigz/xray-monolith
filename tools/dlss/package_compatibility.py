@@ -13,11 +13,11 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 REPO = Path(__file__).resolve().parents[2]
 SOURCE = REPO / "extras/dlss_fomod"
 LEGACY = REPO / "extras/dlss_gamma/gamedata"
-VERSION = "0.71"
+VERSION = "0.72"
 # The only shader Atmospherics RC7.x and this patch both replace. SSS and Atmospherics
 # keep their own ssfx_* shaders; the upscaler needs no changes in them.
 ATMOS_FILES = ("deffer_impl_flat.ps",)
-# Glossy Puddles Overhaul v2.3 deffer_impl_flat.ps, one per weather family.
+# Glossy Puddles Overhaul v2.4 deffer_impl_flat.ps, one per weather family.
 GLOSSY_PUDDLES = ("glossy_puddles_pbr", "glossy_puddles_sss")
 
 
@@ -78,7 +78,7 @@ def build(output: Path, version: str = VERSION) -> None:
         "atmos_rc8.txt": "Selected: Atmospherics 2.69 RC8.",
         "wearable.txt": "Selected: WearableDevices compatibility.",
         "better_beefs.txt": "Selected: Better Beef's NVGs (.19) compatibility.",
-        "glossy_puddles.txt": "Selected: Glossy Puddles Overhaul v2.3 compatibility.",
+        "glossy_puddles.txt": "Selected: Glossy Puddles Overhaul v2.4 compatibility.",
     }
     for name, description in selections.items():
         write_text(stage / "selections" / name, f"{description}\nPatch: {version}\n")

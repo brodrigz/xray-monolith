@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-  <moduleName>DLSS / FSR3 Compatibility Patch - 0.71</moduleName>
+  <moduleName>Native Upscaling Binaries Compatibility Patch - 0.72</moduleName>
   <requiredInstallFiles>
     <folder source="docs" destination="DLSS Compatibility - Instructions" priority="0" />
   </requiredInstallFiles>
@@ -11,7 +11,7 @@
           <plugins order="Explicit">
             <plugin name="SSS 23.5 compatibility - REQUIRED">
               <description>BEFORE INSTALLING
-- Install the 0.71 DLSS/FSR3 modded binaries into your Anomaly folder.
+- Install Native Upscaling Binaries 0.72 into your Anomaly folder.
 - Install Screen Space Shaders 23.5 (already comes with gamma 0.9.5)
 
 AFTER INSTALLING
@@ -67,7 +67,7 @@ Keep only one Atmospherics version enabled.</description>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="Atmospherics 2.69 RC7.5 to RC7.71">
+            <plugin name="Atmospherics 2.69 RC7">
               <description>Choose this for Atmospherics 2.69 RC7.5, RC7.6, RC7.7 or RC7.71,
 with any AO, IL and SSR options picked in its installer.
 
@@ -136,14 +136,14 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="Glossy Puddles Overhaul v2.3 compatibility">
-              <description>Select if Glossy Puddles Overhaul v2.3 (Erandis) is installed. v2.2 also works.
+            <plugin name="Glossy Puddles Overhaul v2.4 compatibility">
+              <description>Select if Glossy Puddles Overhaul v2.4 (Erandis) is installed.
 Keeps its puddles and adds the ground motion vectors DLSS / FSR need.
 
 Matches the Atmospherics choice on page 2:
-- Atmospherics RC7.x or RC8: for "PBR Shader Based Weathers" in Glossy Puddles.
+- Atmospherics RC7 or RC8: for "PBR Shader Based Weathers" in Glossy Puddles.
 - Otherwise: for "SSS Based Weathers" in Glossy Puddles.
-With RC8, Glossy Puddles' own files replace some of RC8's puddle and reflection shaders.
+With Atmospherics RC8, use Glossy Puddles v2.4; older versions fail to compile shaders.
 
 Keep the original Glossy Puddles mod enabled, above this patch.</description>
               <files>

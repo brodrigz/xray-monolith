@@ -21,7 +21,7 @@ REQUIREMENTS / SUPPORTED SHADER COMBINATION
 - This modified DX11 engine, based on all-in-one-vs2022-wpo-mt.
 - Screen Space Shaders Update 23 (audited local package: Update23_5).
 - Atmospherics 2.69 RC7.5 and Beef's shader-based NVGs (audited GAMMA versions).
-- DLSS: a supported NVIDIA RTX GPU/driver. nvngx_dlss.dll 310.9.1.0 is included.
+- DLSS: a supported NVIDIA RTX GPU/driver. nvngx_dlss.dll 310.9.16.0 is included.
 - FSR 3.1.2: D3D feature level 11.1; no NVIDIA runtime is needed to run FSR.
   The DX11 backend is community-provided, not AMD's official DX12/Vulkan backend.
   AMD/Intel GPU compatibility has not been validated on physical hardware.
