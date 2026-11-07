@@ -974,14 +974,14 @@ HRESULT D3D12PresentBridge::PrepareDepthExport()
     return S_OK;
 }
 
-HRESULT D3D12PresentBridge::CaptureHudless(bool valid)
+HRESULT D3D12PresentBridge::CaptureHudless(bool valid, ID3D11Texture2D* source)
 {
     m_hudlessValid = NeedsFGInputs() && valid && m_sceneValid;
     if (m_hudlessValid)
     {
         if (!m_acquired || m_submitted) return Check(E_UNEXPECTED, "HUD-less capture outside acquired frame");
         auto& slot = m_slots[m_currentSlot];
-        m_context11->CopyResource(slot.inputs11[2].Get(), slot.shared11.Get());
+        m_context11->CopyResource(slot.inputs11[2].Get(), source ? source : slot.shared11.Get());
         ++m_statistics.hudlessCaptures;
         m_statistics.inputCopyBytes += UINT64(m_desc.Width) * m_desc.Height * 4;
     }

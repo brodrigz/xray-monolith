@@ -466,6 +466,63 @@ void CDSGraphManager::r_dsgraph_render_dlss_effects()
 	r_dsgraph_render_graph_sorted(RGraph.mapDlssHudEffects, true);
 	RImplementation.rmNormal();
 }
+
+// Reflex sight reticles without the scope lens flag are drawn in the scene with
+// the HUD. Keep copies for frame generation's mask, drawn after the upscaler.
+void CDSGraphManager::r_dsgraph_extract_fg_reticles()
+{
+	RGraph.mapFgReticles.clear();
+	for (const auto& item : RGraph.mapHUDSorted.Sorted)
+	{
+		for (const auto& pass : item.pSE->passes)
+		{
+			const char* name = pass->ps ? pass->ps->cName.c_str() : nullptr;
+			if (!name || strncmp(name, "models_reflex_reticle", 21)) continue;
+			RGraph.mapFgReticles.push_back(item);
+			break;
+		}
+	}
+}
+
+void CDSGraphManager::r_dsgraph_render_fg_reticles()
+{
+	PROF_EVENT("r_dsgraph_render_fg_reticles");
+	CHudInitializer initializer(true);
+	RImplementation.rmNear();
+	r_dsgraph_render_graph_sorted(RGraph.mapFgReticles, true);
+	RImplementation.rmNormal();
+}
+
+void CDSGraphManager::r_dsgraph_render_fg_mask(bool reticles)
+{
+	PROF_EVENT("r_dsgraph_render_fg_mask");
+	// Only these: the effects list may hold particles, and the scope list lenses.
+	const char* prefix = reticles ? "models_reflex_reticle" : "models_laserbeam";
+	const size_t length = xr_strlen(prefix);
+	R_dsgraph::mapDSGraphItems<float, true> items;
+	const auto collect = [&](const auto& from)
+	{
+		items.clear();
+		for (const auto& item : from)
+		{
+			for (const auto& pass : item.pSE->passes)
+			{
+				const char* name = pass->ps ? pass->ps->cName.c_str() : nullptr;
+				if (!name || strncmp(name, prefix, length)) continue;
+				items.push_back(item);
+				break;
+			}
+		}
+		return !items.empty();
+	};
+	if (!reticles && collect(RGraph.mapDlssEffects))
+		r_dsgraph_render_graph_sorted(items, true);
+	if (!collect(reticles ? RGraph.mapScopeHUDSorted : RGraph.mapDlssHudEffects)) return;
+	CHudInitializer initializer(true);
+	RImplementation.rmNear();
+	r_dsgraph_render_graph_sorted(items, true);
+	RImplementation.rmNormal();
+}
 #endif
 
 void CDSGraphManager::r_dsgraph_render_sorted_hud()

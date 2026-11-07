@@ -4,6 +4,7 @@
 #include "../../../xrEngine/IGame_Persistent.h"
 #include "../../../xrEngine/IGame_Level.h"
 #include "../../../xrEngine/RendererError.h"
+#pragma comment(lib, "version.lib") // RuntimeVersions
 
 extern u32 ps_r_frame_generation;
 extern int ps_r_fg_diagnostics;
@@ -229,13 +230,52 @@ void CaptureScene()
     sceneCaptured = true;
 }
 
-void CaptureHudless()
+void CaptureHudless(ID3D11Texture2D* source)
 {
     auto* bridge = HW.PresentationBridge();
     if (!bridge) return;
-    const HRESULT result = bridge->CaptureHudless(sceneCaptured);
+    const HRESULT result = bridge->CaptureHudless(sceneCaptured, source);
     sceneCaptured = false;
     if (FAILED(result)) R_CHK(bridge->FailGeneration(bridge->LastFailure()));
+}
+
+namespace
+{
+// File version of a loaded module, "none" when it is not loaded.
+void ModuleVersion(const wchar_t* module, char* out, size_t size)
+{
+    xr_strcpy(out, size, "none");
+    HMODULE handle = GetModuleHandleW(module);
+    wchar_t path[MAX_PATH]{};
+    if (!handle || !GetModuleFileNameW(handle, path, MAX_PATH)) return;
+    DWORD ignored = 0;
+    const DWORD bytes = GetFileVersionInfoSizeW(path, &ignored);
+    xr_vector<u8> data(bytes);
+    VS_FIXEDFILEINFO* info = nullptr;
+    UINT length = 0;
+    if (!bytes || !GetFileVersionInfoW(path, 0, bytes, data.data()) ||
+        !VerQueryValueW(data.data(), L"\\", (void**)&info, &length) || !info)
+    {
+        xr_strcpy(out, size, "loaded, no version");
+        return;
+    }
+    xr_sprintf(out, size, "%u.%u.%u.%u", HIWORD(info->dwFileVersionMS), LOWORD(info->dwFileVersionMS),
+        HIWORD(info->dwFileVersionLS), LOWORD(info->dwFileVersionLS));
+}
+}
+
+const char* RuntimeVersions()
+{
+    static string512 text;
+    auto* bridge = HW.PresentationBridge();
+    if (!bridge) return "no DX12 presentation bridge";
+    string64 dlssg, sl;
+    ModuleVersion(L"nvngx_dlssg.dll", dlssg, sizeof(dlssg));
+    ModuleVersion(L"sl.dlss_g.dll", sl, sizeof(sl));
+    const char* fsr = bridge->FsrFrameGenerationVersion();
+    xr_sprintf(text, "runtime %s, FSR frame generation %s, nvngx_dlssg %s, sl.dlss_g %s",
+        bridge->RuntimeName(), fsr && *fsr ? fsr : "none", dlssg, sl);
+    return text;
 }
 
 void Reset()

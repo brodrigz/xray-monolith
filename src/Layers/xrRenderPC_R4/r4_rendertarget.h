@@ -413,6 +413,19 @@ public:
 	ref_shader s_dlss_volumetric_history;
 	u32 dlss_volumetric_history = 0; // the target holding the latest result
 	u32 dlss_volumetric_frame = 0;
+	// Frame generation's HUD-less image (DX12): the frame, and its copy with the
+	// r_fg_hudless_test square or the r_fg_laser_fill pixels filled. Created on
+	// first use, in the presentation surface's format.
+	ref_rt rt_fg_hudless[2];
+	ref_shader s_fg_hudless_test;
+	ref_shader s_fg_laser_fill;
+	int fg_hudless_test_state = 0; // 0 not created, 1 ready, -1 shader missing
+	int fg_laser_fill_state = 0;
+	int reported_fg_hudless_test = 0; // the size last logged
+	int reported_fg_laser_fill = 0; // the mode last logged
+	// r_fg_laser_fill: laser beams and reflex sight reticles drawn again over black.
+	ref_rt rt_fg_mask;
+	u32 fg_mask_frame = 0; // the frame the mask was cleared on
 	ref_shader s_postprocess_msaa;
 	ref_geom g_postprocess;
 	ref_shader s_menu;
@@ -571,6 +584,13 @@ public:
 	bool DlssVolumetricOptimized() const;
 	void dlss_volumetric_history_create();
 	ID3DBaseTexture* dlss_volumetric_over_time(float jitterX, float jitterY);
+	bool fg_hudless_create(D3DFORMAT format);
+	bool fg_hudless_test_create();
+	bool fg_laser_fill_create();
+	bool FgMaskWanted();
+	// Binds the mask for this frame's beams or reticles; false when not wanted.
+	bool fg_mask_begin();
+	ID3DTexture2D* fg_hudless_image();
 	void dlss_hdr_begin();
 	ID3DTexture2D* dlss_hdr_encode(u32 element);
 	void dlss_hdr_restore();

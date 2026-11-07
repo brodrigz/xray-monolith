@@ -84,7 +84,8 @@ public:
     // framesToGenerate: DLSS-G frames per rendered frame (1 = 2x); FSR always generates one.
     HRESULT BeginFrame(UINT frameLimitUs, bool allowGeneration, UINT framesToGenerate = 1);
     HRESULT CaptureScene(ID3D11Resource* depth, ID3D11Resource* motion, const FrameGenerationInputs& inputs);
-    HRESULT CaptureHudless(bool valid);
+    // source: an image to use instead of the presentation surface, same size and format.
+    HRESULT CaptureHudless(bool valid, ID3D11Texture2D* source = nullptr);
     bool NeedsFGInputs() const;
     // ReShade runs on this D3D12 device, which never sees the game's depth buffer. When
     // enabled (only with ReShade loaded), the scene depth captured for the frame is also

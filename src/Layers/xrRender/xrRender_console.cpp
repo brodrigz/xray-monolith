@@ -146,6 +146,15 @@ xr_token screenshot_mode_token [ ] = {
 // Method switches between DLSS and FSR rebuild DX12 presentation on vid_restart.
 u32 ps_r_frame_generation = 0;
 int ps_r_fg_diagnostics = 0; // Latched at bridge creation.
+// Developer test for frame generation afterimages: a centred square, this percent of the
+// screen height from centre to edge, is filled from its border in the HUD-less image
+// given to frame generation. The presented frame keeps it. 0 = off.
+int ps_r_fg_hudless_test = 0;
+// Laser beams and reflex sight reticles are filled from the pixels around them in
+// the HUD-less image, so frame generation does not interpolate them into
+// afterimages. r_fg_laser_fill_view presents that image, to check the fill.
+int ps_r_fg_laser_fill = 1;
+int ps_r_fg_laser_fill_view = 0;
 // dlss3x/dlss4x ask DLSS-G for 2/3 generated frames, clamped to what the runtime allows.
 // Their ids follow fsr so saved configs keep their meaning.
 static xr_token frame_generation_token[] = {{"off",0},{"dlss",1},{"dlss3x",3},{"dlss4x",4},{"fsr",2},{nullptr,0}};
@@ -1662,6 +1671,9 @@ void xrRender_initconsole()
 #ifdef XR_DX12_BRIDGE
     CMD4(CCC_SupportedToken, "r_frame_generation", &ps_r_frame_generation, frame_generation_token, &dlss::FrameGenerationSupported);
     CMD4(CCC_Integer, "r_fg_diagnostics", &ps_r_fg_diagnostics, 0, 1);
+    CMD4(CCC_UnsavedInteger, "r_fg_hudless_test", &ps_r_fg_hudless_test, 0, 40);
+    CMD4(CCC_Integer, "r_fg_laser_fill", &ps_r_fg_laser_fill, 0, 1);
+    CMD4(CCC_UnsavedInteger, "r_fg_laser_fill_view", &ps_r_fg_laser_fill_view, 0, 1);
 #endif
 	CMD3(CCC_Token, "r_fsr3_quality", &ps_r_fsr3_quality, fsr3_quality_token);
 	CMD3(CCC_Token, "r_dlss_preset", &ps_r_dlss_preset, dlss_preset_token);

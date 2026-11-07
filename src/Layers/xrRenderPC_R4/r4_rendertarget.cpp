@@ -214,6 +214,84 @@ public:
     }
 };
 
+class CBlender_fg_hudless_test : public IBlender
+{
+public:
+    CBlender_fg_hudless_test() { description.CLS = 0; }
+    LPCSTR getComment() override { return "Frame generation HUD-less test square"; }
+    BOOL canBeDetailed() override { return FALSE; }
+    BOOL canBeLMAPped() override { return FALSE; }
+    void Compile(CBlender_Compile& C) override
+    {
+        IBlender::Compile(C);
+        if (C.iElement != 0) return;
+        C.r_Pass("stub_screen_space", "dlss_fg_hudless_test", FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_image", "$user$fg_hudless_0");
+        C.r_End();
+    }
+};
+
+class CBlender_fg_laser_fill : public IBlender
+{
+public:
+    CBlender_fg_laser_fill() { description.CLS = 0; }
+    LPCSTR getComment() override { return "Frame generation HUD-less laser fill"; }
+    BOOL canBeDetailed() override { return FALSE; }
+    BOOL canBeLMAPped() override { return FALSE; }
+    void Compile(CBlender_Compile& C) override
+    {
+        IBlender::Compile(C);
+        if (C.iElement != 0) return;
+        C.r_Pass("stub_screen_space", "dlss_fg_laser_fill", FALSE, FALSE, FALSE);
+        C.r_dx10Texture("s_image", "$user$fg_hudless_0");
+        C.r_dx10Texture("s_mask", "$user$fg_mask");
+        C.r_End();
+    }
+};
+
+// In the presentation surface's format, recreated if it changes.
+bool CRenderTarget::fg_hudless_create(D3DFORMAT format)
+{
+	if (rt_fg_hudless[0] && rt_fg_hudless[0]->fmt == format) return true;
+	rt_fg_hudless[0].create("$user$fg_hudless_0", Device.dwWidth, Device.dwHeight, format);
+	rt_fg_hudless[1].create("$user$fg_hudless_1", Device.dwWidth, Device.dwHeight, format);
+	return rt_fg_hudless[0] && rt_fg_hudless[1];
+}
+
+bool CRenderTarget::fg_hudless_test_create()
+{
+	if (fg_hudless_test_state) return fg_hudless_test_state > 0;
+	string_path shader;
+	if (!FS.exist(shader, "$game_shaders$", "r3\\dlss_fg_hudless_test", ".ps"))
+	{
+		Msg("! [FG test] r_fg_hudless_test needs shaders\\r3\\dlss_fg_hudless_test.ps from the compatibility patch");
+		fg_hudless_test_state = -1;
+		return false;
+	}
+	CBlender_fg_hudless_test blender;
+	s_fg_hudless_test.create(&blender, "dlss_fg_hudless_test");
+	fg_hudless_test_state = 1;
+	return true;
+}
+
+// Also creates the display-size mask the beams and reticles are drawn into.
+bool CRenderTarget::fg_laser_fill_create()
+{
+	if (fg_laser_fill_state) return fg_laser_fill_state > 0;
+	string_path shader;
+	if (!FS.exist(shader, "$game_shaders$", "r3\\dlss_fg_laser_fill", ".ps"))
+	{
+		Msg("! [FG] r_fg_laser_fill needs shaders\\r3\\dlss_fg_laser_fill.ps from the compatibility patch");
+		fg_laser_fill_state = -1;
+		return false;
+	}
+	rt_fg_mask.create("$user$fg_mask", Device.dwWidth, Device.dwHeight, D3DFMT_A8R8G8B8);
+	CBlender_fg_laser_fill blender;
+	s_fg_laser_fill.create(&blender, "dlss_fg_laser_fill");
+	fg_laser_fill_state = 1;
+	return true;
+}
+
 void CRenderTarget::dlss_volumetric_history_create()
 {
 	if (s_dlss_volumetric_history) return;

@@ -211,6 +211,12 @@ void CRenderTarget::phase_dlss_scope(float jitterX, float jitterY)
 	}
 	RCache.InvalidateTextures();
 
+#ifdef XR_DX12_BRIDGE
+	// Reflex sight reticles over black, for frame generation's HUD-less image.
+	// Not the lenses: they magnify the frame.
+	if (fg_mask_begin())
+		RImplementation.GMBase.r_dsgraph_render_fg_mask(true);
+#endif
 	u_setrt(rt_dlss_post_source, nullptr, nullptr, HW.pBaseZB);
 	RCache.set_CullMode(CULL_CCW);
 	RCache.set_Stencil(FALSE);
@@ -429,6 +435,11 @@ void CRenderTarget::dlss_post_effects(float jitterX, float jitterY)
 	}
 
 	phase_dlss_native_depth(jitterX, jitterY);
+#ifdef XR_DX12_BRIDGE
+	// The beams again over black, for frame generation's HUD-less image.
+	if (fg_mask_begin())
+		RImplementation.GMBase.r_dsgraph_render_fg_mask(false);
+#endif
 	u_setrt(withPostChain ? rt_Generic_0 : rt_dlss_post_source, nullptr, nullptr, HW.pBaseZB);
 	RImplementation.rmNormal();
 	RCache.set_CullMode(CULL_CCW);
@@ -593,6 +604,24 @@ void CRenderTarget::phase_dlss_postprocess()
 	// magnified the jitter and was reconstructed with the world's motion vectors.
 	if (scope_3D_fake_enabled && ScopeAfterUpscale() && !RImplementation.GMBase.RGraph.mapScopeHUDSorted.empty())
 		phase_dlss_scope(sceneJitter.x, sceneJitter.y);
+
+#ifdef XR_DX12_BRIDGE
+	// Reflex sight reticles drawn in the scene: again over black, at display
+	// resolution without jitter, for frame generation's HUD-less image.
+	if (!RImplementation.GMBase.RGraph.mapFgReticles.empty())
+	{
+		ID3DRenderTargetView* target = RCache.get_RT();
+		ID3DDepthStencilView* depth = RCache.get_ZB();
+		phase_dlss_native_depth(sceneJitter.x, sceneJitter.y);
+		if (fg_mask_begin())
+			RImplementation.GMBase.r_dsgraph_render_fg_reticles();
+		RImplementation.GMBase.RGraph.mapFgReticles.clear();
+		RCache.set_RT(target);
+		RCache.set_RT(nullptr, 1);
+		RCache.set_RT(nullptr, 2);
+		RCache.set_ZB(depth);
+	}
+#endif
 
 	// Lens flares are additive, depth-free sprites that cover the HUD. In the scene
 	// they would be reprojected with the hands' motion vectors and reconstructed as

@@ -1,0 +1,62 @@
+// Frame generation's HUD-less image with laser beams and reflex sight reticles
+// filled from the pixels around them (r_fg_laser_fill). Frame generation moves
+// what it interpolates along the scene's motion, which left afterimages of the
+// beams and dots; where the HUD-less image differs from the presented frame it
+// takes that frame instead, so they are shown where they are.
+// s_mask holds this frame's beams and reticles drawn again over black.
+Texture2D s_image;
+Texture2D s_mask;
+
+#define FILL_THRESHOLD (3.0f / 255.0f) // mask level that counts as covered
+#define FILL_REACHES   15
+
+static const int fill_reach[FILL_REACHES] = {1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64};
+static const int2 fill_dirs[8] = {
+    int2(1, 0), int2(-1, 0), int2(0, 1), int2(0, -1),
+    int2(1, 1), int2(-1, -1), int2(1, -1), int2(-1, 1)};
+
+bool fill_covered(int2 p, int2 size)
+{
+    float3 m = s_mask.Load(int3(clamp(p, 0, size - 1), 0)).rgb;
+    return max(m.r, max(m.g, m.b)) > FILL_THRESHOLD;
+}
+
+float4 main(float4 position : SV_Position) : SV_Target
+{
+    int2 p = int2(position.xy);
+    uint w, h;
+    s_image.GetDimensions(w, h);
+    int2 size = int2(w, h);
+
+    // One pixel round the mask as well, for the beams' antialiased edges.
+    bool covered = false;
+    [unroll] for (int y = -1; y <= 1; y++)
+        [unroll] for (int x = -1; x <= 1; x++)
+            covered = covered || fill_covered(p + int2(x, y), size);
+    [branch] if (!covered)
+        return s_image.Load(int3(p, 0));
+
+    // In each direction, the first pixel clear of the mask with a clear one beyond
+    // it, and that one taken; nearer ones count more. Opposite directions blend
+    // across a thin beam.
+    float4 sum = 0;
+    float weight = 0;
+    [unroll] for (int d = 0; d < 8; d++)
+    {
+        int2 dir = fill_dirs[d];
+        [loop] for (int i = 0; i < FILL_REACHES; i++)
+        {
+            int2 q = p + dir * fill_reach[i];
+            if (any(q < 0) || any(q + dir >= size) || any(q + dir < 0))
+                break;
+            if (fill_covered(q, size) || fill_covered(q + dir, size))
+                continue;
+            float k = 1.0f / (float(fill_reach[i] + 1) * length(float2(dir)));
+            sum += s_image.Load(int3(q + dir, 0)) * k;
+            weight += k;
+            break;
+        }
+    }
+    // Nothing clear in reach: keep the pixel.
+    return weight > 0 ? sum / weight : s_image.Load(int3(p, 0));
+}

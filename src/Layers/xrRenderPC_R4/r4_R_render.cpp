@@ -204,6 +204,9 @@ void CRender::Render()
 		GMBase.r_dsgraph_capture_hud();
 		if (dlss::Configured()) GMBase.r_dsgraph_extract_native_ui();
 		if (Target->DlssEffectsAfterUpscale()) GMBase.r_dsgraph_extract_dlss_effects();
+#ifdef XR_DX12_BRIDGE
+		if (Target->FgMaskWanted()) GMBase.r_dsgraph_extract_fg_reticles();
+#endif
 		GMBase.r_dsgraph_render_hud();
 		GMBase.r_dsgraph_render_lods(true,true);
 		if (Details) Details->Render();

@@ -99,6 +99,10 @@ public:
 	void r_dsgraph_render_native_ui(bool renderHudUi);
 	void r_dsgraph_extract_dlss_effects();
 	void r_dsgraph_render_dlss_effects();
+	// Laser beams, or reflex sight reticles, drawn again: their lists are kept.
+	void r_dsgraph_render_fg_mask(bool reticles);
+	void r_dsgraph_extract_fg_reticles();
+	void r_dsgraph_render_fg_reticles();
 #endif
 	void r_dsgraph_render_hud();
 	void r_dsgraph_render_hud_ui();

@@ -1,0 +1,26 @@
+// Developer test for frame generation afterimages (r_fg_hudless_test). The HUD-less
+// image given to frame generation gets a centred square filled from its border, so
+// nothing inside it can be interpolated: where it differs from the presented frame,
+// frame generation takes that frame instead. The presented frame is unchanged.
+Texture2D s_image;
+float4 dlss_fg_hudless_rect; // first and last pixel inside the square: x0, y0, x1, y1
+
+float4 main(float4 position : SV_Position) : SV_Target
+{
+    int2 p = int2(position.xy);
+    int4 r = int4(dlss_fg_hudless_rect);
+    if (p.x < r.x || p.y < r.y || p.x > r.z || p.y > r.w)
+        return s_image.Load(int3(p, 0));
+
+    // The pixels just outside the square, on this row and this column.
+    float4 left   = s_image.Load(int3(r.x - 1, p.y, 0));
+    float4 right  = s_image.Load(int3(r.z + 1, p.y, 0));
+    float4 top    = s_image.Load(int3(p.x, r.y - 1, 0));
+    float4 bottom = s_image.Load(int3(p.x, r.w + 1, 0));
+
+    float2 t = (float2(p - r.xy) + 1.0f) / (float2(r.zw - r.xy) + 2.0f);
+    // Each direction counts more near its own edges.
+    float across = 1.0f / max(min(t.x, 1.0f - t.x), 1e-3f);
+    float down   = 1.0f / max(min(t.y, 1.0f - t.y), 1e-3f);
+    return (lerp(left, right, t.x) * across + lerp(top, bottom, t.y) * down) / (across + down);
+}
