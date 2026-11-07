@@ -530,6 +530,8 @@ void CRenderTarget::phase_dlss_postprocess()
 	bool dlssOutput = dlss_post_output;
 	// HDR input with the post chain before reconstruction: only its result is converted.
 	const bool hdrResolve = !postAfterUpscale && dlss::HdrInput() && dlss::Active();
+	// Before EndScene, which ends dlss::Active(): the scene held the beams back on this.
+	const bool effectsAfterPost = !postAfterUpscale && DlssEffectsAfterUpscale();
 	if (!postAfterUpscale)
 	{
 #ifdef XR_DX12_BRIDGE
@@ -584,7 +586,7 @@ void CRenderTarget::phase_dlss_postprocess()
 
 	// Without the post chain after reconstruction, laser beams go over its result.
 	// Before the scope lenses, which magnify them with the rest of the frame.
-	if (!postAfterUpscale && DlssEffectsAfterUpscale())
+	if (effectsAfterPost)
 		dlss_post_effects(sceneJitter.x, sceneJitter.y);
 
 	// 3D scope lenses magnify the frame around them. In the scene the zoom also
