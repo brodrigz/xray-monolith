@@ -12,6 +12,7 @@ uniform float4 bus_erandis; // Glossy Puddles: 0 / 0 / 0 / puddle gloss in w ( m
 #include "sload.h"
 
 #include "screenspace_common_ripples.h"
+#include "erandis_puddle_ripples.h"
 
 Texture2D s_puddles_normal;
 Texture2D s_puddles_perlin;
@@ -147,6 +148,9 @@ f_deffer 	main	( p_flat I 		)
 	float3 ripplesNormal = 0;
 #endif
 
+	float3 erandis_wk = erandis_puddle_wakes(I.position.xyz) * saturate(puddles * 4.0f);
+	ripplesNormal.xy += erandis_wk.xy;
+
 	// Normal Up and ripples for puddles
 	float3 MirrorUp	= mul(m_V,  float3(ripplesNormal.x, 1.0, ripplesNormal.y));
 	N = lerp(N, MirrorUp, puddles);
@@ -174,6 +178,7 @@ f_deffer 	main	( p_flat I 		)
 
 	// Deeper water is darker
 	D.rgb *= lerp(float3(1.0f, 1.0f, 1.0f), G_PUDDLES_DEPTH_DARKEN, puddles * depth_n);
+	D.rgb *= 1.0f + erandis_wk.z;
 
 	// Puddle gloss ( Glossy Puddles ). bus_erandis.w: time of day + weather ( monkey_gloss.script )
 	float water_src    = saturate(bus_erandis.w);

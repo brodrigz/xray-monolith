@@ -173,10 +173,18 @@ c2_out main( v2p_aa_AA I )
     float lua_param_nvg_num_tubes = frac(shader_param_8.x) * 10.0f;
     if (lua_param_nvg_generation < 0.01f && compute_lens_mask(aspect_ratio_correction(I.Tex0), lua_param_nvg_num_tubes) == 0.0f)
     {
+#ifdef PBRN_WHITE
+        img = tonemap_add_sRGB(img, bloom.xyz*bloom.w, PBRN_WHITE);
+#else
         img = blend_soft(img, bloom.xyz*bloom.w);
+#endif
     }
 #else
+#ifdef PBRN_WHITE
+    img = tonemap_add_sRGB(img, bloom.xyz*bloom.w, PBRN_WHITE);
+#else
     img = blend_soft(img, bloom.xyz*bloom.w);
+#endif
 #endif
 
 // Color grading --------------------------------

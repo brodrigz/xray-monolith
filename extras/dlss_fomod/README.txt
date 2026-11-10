@@ -1,4 +1,4 @@
-NATIVE UPSCALING BINARIES COMPATIBILITY PATCH - 0.72
+NATIVE UPSCALING BINARIES COMPATIBILITY PATCH - 0.721
 https://github.com/brodrigz/xray-monolith
 
 INSTALL
@@ -36,14 +36,22 @@ Better Beef's NVGs (.19):
   Put its patches below its main files, and this compatibility patch last.
   Clear the shader cache through the launcher after changing NVG mods.
 
-Glossy Puddles Overhaul v2.4 (Erandis):
+Glossy Puddles Overhaul v2.5 (Erandis):
   Select only if the original mod is installed and enabled.
+  Requires Glossy Puddles v2.5; with older versions the game fails to
+  compile shaders. Update Glossy Puddles first.
   The patch picks the matching version from your Atmospherics choice:
     Atmospherics RC7 or RC8 -> Glossy Puddles "PBR Shader Based Weathers"
     anything else           -> Glossy Puddles "SSS Based Weathers"
   Put Glossy Puddles above this compatibility patch in MO2's left pane.
-  With Atmospherics RC8, use Glossy Puddles v2.4. Older versions replace
-  RC8's pbr_brdf_terrain.h with one RC8 cannot compile against.
+
+Atmospherics RC8 hotfix 4 is supported; earlier RC8 builds still work.
+
+WHAT'S NEW IN 0.721
+-------------------
+Uses the same 0.72 binaries; only this compatibility patch changed.
+- Glossy Puddles v2.5: its new footstep ripples now show on flat ground.
+- Better Beef's + Atmospherics RC8: keeps hotfix 4's new bloom blending.
 
 UPDATING OR CHANGING OPTIONS
 ---------------------------

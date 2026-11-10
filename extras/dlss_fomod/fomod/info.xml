@@ -2,7 +2,7 @@
 <fomod>
   <Name>Native Upscaling Binaries Compatibility Patch</Name>
   <Author>bepis</Author>
-  <Version>0.72</Version>
+  <Version>0.721</Version>
   <Description>Requires SSS 23.5 and Native Upscaling Binaries 0.72.</Description>
   <Website>https://github.com/brodrigz/xray-monolith</Website>
 </fomod>

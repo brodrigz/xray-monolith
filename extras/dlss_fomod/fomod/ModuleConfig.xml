@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-  <moduleName>Native Upscaling Binaries Compatibility Patch - 0.72</moduleName>
+  <moduleName>Native Upscaling Binaries Compatibility Patch - 0.721</moduleName>
   <requiredInstallFiles>
     <folder source="docs" destination="DLSS Compatibility - Instructions" priority="0" />
   </requiredInstallFiles>
@@ -136,14 +136,14 @@ Leave unchecked for stock GAMMA / stock Beef's NVG.</description>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="Glossy Puddles Overhaul v2.4 compatibility">
-              <description>Select if Glossy Puddles Overhaul v2.4 (Erandis) is installed.
-Keeps its puddles and adds the ground motion vectors DLSS / FSR need.
+            <plugin name="Glossy Puddles Overhaul v2.5 compatibility">
+              <description>Select if Glossy Puddles Overhaul v2.5 (Erandis) is installed.
+Keeps its puddles and footstep ripples and adds the ground motion vectors DLSS / FSR need.
 
 Matches the Atmospherics choice on page 2:
 - Atmospherics RC7 or RC8: for "PBR Shader Based Weathers" in Glossy Puddles.
 - Otherwise: for "SSS Based Weathers" in Glossy Puddles.
-With Atmospherics RC8, use Glossy Puddles v2.4; older versions fail to compile shaders.
+Requires Glossy Puddles v2.5; older versions fail to compile shaders.
 
 Keep the original Glossy Puddles mod enabled, above this patch.</description>
               <files>
